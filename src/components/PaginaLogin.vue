@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { reactive } from "vue";
 import { useRouter } from 'vue-router';
 import {useUserStore} from "@/stores/user.js";
@@ -299,4 +299,279 @@ const handleBackButton = () => {
 
 
 
+</style> -->
+
+<script setup>
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user.js";
+
+const router = useRouter();
+const userStore = useUserStore();
+
+const form = reactive({
+  email: "",
+  password: "",
+  eroareEmail: "",
+  eroareParola: "",
+  isPasswordHidden: false,
+  isEmailHidden: true,
+});
+
+const validateEmail = () => {
+  if (form.email === "") {
+    form.eroareEmail = "Câmp obligatoriu";
+    return false;
+  }
+  form.eroareEmail = "";
+  return true;
+};
+
+const validatePassword = () => {
+  if (form.password === "") {
+    form.eroareParola = "Câmp obligatoriu";
+    return false;
+  }
+  form.eroareParola = "";
+  return true;
+};
+
+const handleContinue = async () => {
+  if (validateEmail()) {
+    const response = await fetch("http://localhost:3000/api/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.email }),
+    });
+    const data = await response.json();
+    console.log(data.found);
+
+    if (data.found === 1) {
+      console.log("Emailul exista");
+      form.isPasswordHidden = true;
+      form.isEmailHidden = false;
+    } else {
+      console.log("Emailul nu exista");
+      router.push({ name: "PaginaSignUp", query: { email: form.email } });
+    }
+  }
+};
+
+const handlePasswordContinue = async () => {
+  if (validatePassword()) {
+    const passwordRes = await fetch(
+      "http://localhost:3000/api/check-password",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      }
+    );
+
+    const nameRes = await fetch("http://localhost:3000/api/get-name", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: form.email }),
+    });
+
+    const passwordData = await passwordRes.json();
+    const nameData = await nameRes.json();
+
+    if (form.password === passwordData.password) {
+      console.log("Parola este identica!");
+      const token = "dummy-token";
+      const userData = { name: nameData.numeUser };
+
+      // Salvează email-ul în localStorage
+      localStorage.setItem("userEmail", form.email);
+
+      userStore.login(token, userData);
+      router.push({ name: "StadionMunicipal" });
+    } else {
+      form.eroareParola = "Parola este incorectă!";
+    }
+  }
+};
+
+const handleBackButton = () => {
+  form.isEmailHidden = true;
+  form.isPasswordHidden = false;
+  console.log(form.isEmailHidden);
+};
+</script>
+
+<template>
+  <div
+    class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans"
+  >
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+      "
+    >
+      <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div
+          class="bg-white py-8 px-4 shadow-2xl shadow-gray-200 sm:rounded-2xl sm:px-10 border-t-4 border-red-600 relative"
+        >
+          <div v-if="form.isEmailHidden" class="space-y-6">
+            <div style="text-align: center">
+              <h1
+                style="font-size: 30px"
+                class="text-xl font-bold text-gray-800"
+              >
+                Login
+              </h1>
+            </div>
+
+            <div style="margin-top: 20px; margin-bottom: 20px">
+              <label for="email" class="block text-sm font-medium text-gray-700"
+                >Email</label
+              >
+              <div class="mt-1">
+                <input
+                  id="email"
+                  type="email"
+                  v-model="form.email"
+                  autofocus
+                  class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
+                  :class="{
+                    'border-red-500 ring-1 ring-red-500': form.eroareEmail,
+                  }"
+                />
+              </div>
+              <p
+                v-if="form.eroareEmail"
+                class="mt-2 text-sm text-red-600 flex items-center gap-1"
+              >
+                <span>⚠</span> {{ form.eroareEmail }}
+              </p>
+            </div>
+
+            <button
+              style="cursor: pointer"
+              @click="handleContinue"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors uppercase tracking-wider"
+            >
+              Continuă
+            </button>
+
+            <div style="margin-top: 60px" class="mt-6">
+              <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                  <span class="px-2 bg-white text-gray-500"
+                    >sau intră în cont cu</span
+                  >
+                </div>
+              </div>
+
+              <div
+                style="margin-top: 15px; margin-bottom: 15px"
+                class="mt-6 grid grid-cols-2 gap-3"
+              >
+                <button
+                  style="cursor: pointer"
+                  class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+                >
+                  <span class="sr-only">Facebook</span>
+                  <span class="font-bold text-[#1877F2]">Facebook</span>
+                </button>
+
+                <button
+                  style="cursor: pointer"
+                  class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+                >
+                  <span class="sr-only">Google</span>
+                  <span class="font-bold text-gray-700">Google</span>
+                </button>
+              </div>
+
+              <p class="mt-6 text-center text-xs text-gray-400">
+                Dacă nu aveți cont, îl puteți crea la pasul următor.
+              </p>
+            </div>
+          </div>
+
+          <div v-if="form.isPasswordHidden" class="space-y-6">
+            <div style="display: flex; flex-direction: column; gap: 20px">
+              <div style="display: flex; align-items: center; gap: 20px">
+                <button
+                  @click="handleBackButton"
+                  class="flex items-center text-sm text-gray-500 hover:text-red-600 transition-colors group"
+                >
+                  <img
+                    style="color: black"
+                    class="transform rotate-180 opacity-60 group-hover:opacity-100 transition-opacity"
+                    src="@/assets/images/Icons/menu_arrow_icon.png"
+                    alt="back"
+                  />
+                  Înapoi
+                </button>
+
+                <div>
+                  <h3
+                    style="font-size: 30px"
+                    class="text-xl font-bold text-gray-800"
+                  >
+                    Bine ai revenit!
+                  </h3>
+                </div>
+              </div>
+              <p class="text-sm text-gray-500 mt-1">
+                Introduceți parola pentru a intra în cont.
+              </p>
+            </div>
+
+            <div style="margin-top: 30px; margin-bottom: 50px">
+              <label
+                for="password"
+                class="block text-sm font-medium text-gray-700"
+                >Parolă</label
+              >
+              <div class="mt-1">
+                <input
+                  id="password"
+                  type="password"
+                  v-model="form.password"
+                  autofocus
+                  class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
+                  :class="{
+                    'border-red-500 ring-1 ring-red-500': form.eroareParola,
+                  }"
+                />
+              </div>
+              <p
+                v-if="form.eroareParola"
+                class="mt-2 text-sm text-red-600 flex items-center gap-1"
+              >
+                <span>⚠</span> {{ form.eroareParola }}
+              </p>
+            </div>
+
+            <button
+              style="cursor: pointer"
+              @click="handlePasswordContinue"
+              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors uppercase tracking-wider"
+            >
+              Intră în cont
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* We don't need much CSS here because Tailwind handles the styling.
+   We just keep the clean reset.
+*/
+* {
+  box-sizing: border-box;
+}
 </style>

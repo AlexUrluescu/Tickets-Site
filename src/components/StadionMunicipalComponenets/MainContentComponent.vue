@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { ref, onMounted, computed } from "vue";
 import.meta.url;
 
@@ -331,4 +331,314 @@ onMounted(async () => {
 .rezerva-bilete.disabled:hover {
   background-color: #cccccc;
 }
+</style> -->
+
+<script setup>
+import { ref, onMounted, computed } from "vue";
+import.meta.url;
+
+defineProps(["openCumparaBilete"]);
+
+const awayTeamName = ref("");
+const matchDate = ref("");
+const matchTime = ref("");
+const awayTeamLogo = ref("");
+const allMatches = ref([]);
+const mainMatchId = ref(null);
+
+console.log("awayTeamLogo", awayTeamLogo);
+
+// Funcție pentru verificarea dacă un meci este disponibil pentru achiziționarea de bilete
+const isMatchAvailableForTickets = (matchDateStr) => {
+  if (!matchDateStr) return false;
+
+  const today = new Date();
+  const matchDate = new Date(matchDateStr);
+
+  // Calculăm data limită (o lună de la azi)
+  const oneMonthFromNow = new Date();
+  oneMonthFromNow.setMonth(today.getMonth() + 1);
+
+  // Meciul trebuie să fie în viitor și în următoarea lună
+  return matchDate >= today && matchDate <= oneMonthFromNow;
+};
+
+// Computed property pentru verificarea meciului principal
+const isMainMatchAvailable = computed(() => {
+  console.log("matchDate.value", matchDate.value);
+
+  return isMatchAvailableForTickets(matchDate.value);
+});
+
+// Funcție pentru verificarea fiecărui meci din lista completă
+const isMatchTicketAvailable = (match) => {
+  return isMatchAvailableForTickets(match.matchDate);
+};
+
+onMounted(async () => {
+  try {
+    const res = await fetch("http://localhost:3000/api/away-team");
+    const data = await res.json();
+
+    console.log("data", data);
+
+    awayTeamName.value = data.awayTeamName || "Echipă necunoscută";
+    mainMatchId.value = data.matchId;
+    console.log("MainContent - matchId primit de la API:", data.matchId);
+    console.log("MainContent - tip matchId:", typeof data.matchId);
+    const awayTeamId = data.awayTeamId;
+    console.log("awayTeamId", awayTeamId);
+
+    const matchDateRes = await fetch(
+      `http://localhost:3000/api/match-date?id=${awayTeamId}`
+    );
+    const matchDateData = await matchDateRes.json();
+    matchDate.value = matchDateData.matchDate || "Data nu a fost gasită";
+
+    const matchTimeRes = await fetch(
+      `http://localhost:3000/api/match-time?id=${awayTeamId}`
+    );
+    const matchTimeData = await matchTimeRes.json();
+    matchTime.value = matchTimeData.matchTime || "Ora nu a fost gasită";
+
+    const awayTeamLogoRes = await fetch(
+      `http://localhost:3000/api/logos?id=${awayTeamId}`
+    );
+    const awayTeamLogoData = await awayTeamLogoRes.json();
+
+    console.log("awayTeamLogoData", awayTeamLogoData);
+
+    awayTeamLogo.value = awayTeamLogoData.awayTeamLogo || "Logo neexistent";
+
+    const allMatchesRes = await fetch("http://localhost:3000/api/all-matches");
+    const allMatchesData = await allMatchesRes.json();
+    allMatches.value = allMatchesData.matches || [];
+  } catch (error) {
+    console.error("Eroare la preluarea datelor:", error);
+  }
+});
+</script>
+
+<template>
+  <div
+    class="min-h-screen w-full bg-slate-50 font-sans py-12 px-4 sm:px-6 flex flex-col items-center gap-12"
+  >
+    <div class="w-full max-w-5xl relative group">
+      <div
+        class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-400 rounded-[45px] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"
+      ></div>
+
+      <div class="relative bg-white rounded-[40px] shadow-2xl overflow-hidden">
+        <div
+          class="bg-gradient-to-r from-blue-800 to-blue-600 p-6 text-center relative overflow-hidden"
+        >
+          <div
+            class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"
+          ></div>
+          <h1
+            class="text-xl md:text-3xl font-black text-white uppercase tracking-widest drop-shadow-md relative z-10"
+          >
+            Următoarea Bătălie pe Oblemenco
+          </h1>
+        </div>
+
+        <div class="p-8 md:p-12 flex flex-col items-center">
+          <div
+            class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 w-full mb-10"
+          >
+            <div class="flex flex-col items-center gap-4 w-48">
+              <div class="relative">
+                <div
+                  class="absolute inset-0 bg-blue-100 rounded-full blur-xl opacity-50"
+                ></div>
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
+                  alt="universitatea_craiova_logo"
+                  class="w-32 h-32 md:w-40 md:h-40 object-contain relative z-10 drop-shadow-xl transition-transform duration-500 hover:scale-110 hover:-rotate-3"
+                />
+              </div>
+              <h2
+                class="font-extrabold text-blue-900 text-center text-xl leading-tight"
+              >
+                Universitatea<br />Craiova
+              </h2>
+            </div>
+
+            <div class="flex flex-col items-center justify-center relative">
+              <span
+                class="text-6xl md:text-8xl font-black text-slate-100 absolute select-none"
+                >VS</span
+              >
+              <span class="text-3xl font-bold text-slate-300 relative z-10"
+                >vs</span
+              >
+            </div>
+
+            <div class="flex flex-col items-center gap-4 w-48">
+              <img
+                :src="awayTeamLogo"
+                :alt="awayTeamName"
+                class="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-xl transition-transform duration-500 hover:scale-110 hover:rotate-3"
+              />
+              <h2
+                class="font-extrabold text-slate-800 text-center text-xl leading-tight"
+              >
+                {{ awayTeamName }}
+              </h2>
+            </div>
+          </div>
+
+          <div
+            style="margin-top: 15px"
+            class="flex flex-col items-center w-full max-w-2xl bg-slate-50 rounded-2xl p-6 border border-slate-100"
+          >
+            <div
+              class="flex flex-wrap justify-center gap-4 text-slate-600 mb-6 font-medium"
+            >
+              <div
+                class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200"
+              >
+                <span class="text-blue-600">📅</span> {{ matchDate }}
+              </div>
+              <div
+                class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200"
+              >
+                <span class="text-blue-600">⏰</span> {{ matchTime }}
+              </div>
+              <div
+                class="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200"
+              >
+                <span class="text-blue-600">📍</span> Stadionul Ion Oblemenco
+              </div>
+            </div>
+
+            <button
+              style="margin-top: 25px; cursor: pointer"
+              class="w-full md:w-auto px-12 py-4 rounded-xl font-bold text-lg uppercase tracking-wider transition-all duration-300 shadow-lg hover:shadow-blue-500/40 transform active:scale-95"
+              :class="[
+                isMainMatchAvailable
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none',
+              ]"
+              :disabled="!isMainMatchAvailable"
+              @click="
+                isMainMatchAvailable &&
+                  openCumparaBilete(
+                    awayTeamName,
+                    awayTeamLogo,
+                    matchDate,
+                    matchTime,
+                    mainMatchId
+                  )
+              "
+            >
+              {{
+                isMainMatchAvailable
+                  ? "Prinde-ți Locul în Tribună"
+                  : "Biletele nu sunt încă disponibile"
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full max-w-5xl">
+      <div class="flex items-center gap-4 mb-8 pl-4 border-l-4 border-blue-600">
+        <h2
+          class="text-2xl md:text-3xl font-bold text-slate-800 uppercase tracking-tight"
+        >
+          Calendar Competițional
+        </h2>
+      </div>
+
+      <div style="margin-top: 10px" class="grid gap-5">
+        <div
+          v-for="(match, index) in allMatches"
+          :key="index"
+          class="group bg-white rounded-xl shadow-sm hover:shadow-xl border border-slate-200 overflow-hidden transition-all duration-300 transform hover:-translate-y-1"
+        >
+          <div class="flex flex-col md:flex-row">
+            <div
+              class="bg-slate-100 md:w-32 flex flex-row md:flex-col items-center justify-center gap-1 p-4 border-b md:border-b-0 md:border-r border-dashed border-slate-300"
+            >
+              <span class="text-blue-600 text-lg">📅</span>
+              <span class="font-bold text-slate-700 text-sm text-center">{{
+                match.matchDate
+              }}</span>
+              <span class="text-slate-400 text-xs">{{ match.matchTime }}</span>
+            </div>
+
+            <div class="flex-1 p-6 flex flex-col justify-center">
+              <div class="flex items-center justify-between gap-4 mb-2">
+                <div class="flex items-center gap-3">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
+                    alt="home_logo"
+                    class="w-10 h-10 object-contain"
+                  />
+                  <span class="font-bold text-slate-800 text-lg hidden sm:block"
+                    >Univ. Craiova</span
+                  >
+                </div>
+                <span class="text-slate-300 font-black text-xl italic">VS</span>
+                <div class="flex items-center gap-3 justify-end">
+                  <span
+                    class="font-bold text-slate-800 text-lg hidden sm:block text-right"
+                    >{{ match.awayTeamName }}</span
+                  >
+                  <img
+                    :src="match.awayTeamLogo"
+                    :alt="match.awayTeamName"
+                    class="w-10 h-10 object-contain"
+                  />
+                </div>
+              </div>
+              <div class="flex justify-center sm:hidden mt-2">
+                <p class="text-sm font-bold text-slate-800">
+                  {{ match.awayTeamName }}
+                </p>
+              </div>
+              <p
+                class="text-center text-xs text-slate-400 mt-2 uppercase tracking-wide"
+              >
+                Stadionul Ion Oblemenco
+              </p>
+            </div>
+
+            <div
+              class="p-6 flex items-center justify-center bg-slate-50 border-t md:border-t-0 md:border-l border-slate-100"
+            >
+              <button
+                style="cursor: pointer"
+                class="w-full md:w-auto px-6 py-2 rounded-lg text-sm font-bold uppercase transition-colors duration-200 border-2"
+                :class="[
+                  isMatchTicketAvailable(match)
+                    ? 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
+                    : 'border-slate-200 text-slate-400 bg-slate-100 cursor-not-allowed',
+                ]"
+                :disabled="!isMatchTicketAvailable(match)"
+                @click="
+                  isMatchTicketAvailable(match) &&
+                    openCumparaBilete(
+                      match.awayTeamName,
+                      match.awayTeamLogo,
+                      match.matchDate,
+                      match.matchTime,
+                      match.id
+                    )
+                "
+              >
+                {{ isMatchTicketAvailable(match) ? "Rezervă" : "Indisponibil" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Scoped styles kept clean as requested */
 </style>

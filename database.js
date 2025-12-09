@@ -68,7 +68,7 @@ async function createTicketPDF(ticketData) {
         .fillColor("#000000")
         .fontSize(20)
         .text(
-          "GameDaySibiu - FC Hermannstadt vs " +
+          "Ion Oblemenco - Tickets Service - FC Hermannstadt vs " +
             (ticketData.awayTeam || "Echipa Oaspete"),
           50,
           25,
@@ -183,8 +183,8 @@ async function createTicketPDF(ticketData) {
         .fontSize(10)
         .fillColor("#666666")
         .text(`Organizator: FC Hermannstadt, RO34826156`, 50, 700)
-        .text(`Contact gamedaysibiu.ro: +40755179942`, 50, 715)
-        .text(`© 2025 www.gamedaysibiu.ro`, 50, 730, { align: "center" });
+        .text(`Contact ionoblemencoticketsservice.ro: +40755179942`, 50, 715)
+        .text(`© 2025 www.ionoblemenco.ro`, 50, 730, { align: "center" });
 
       // Cod bilet
       doc.rect(350, 650, 200, 60).stroke();
@@ -1087,7 +1087,7 @@ app.post("/api/process-payment", async (req, res) => {
             console.log(`Pregătire trimitere email către: ${userEmail}`);
 
             const mailOptions = {
-              from: `"GameDay Sibiu" <${process.env.EMAIL_USER}>`,
+              from: `"Ion Oblemenco - Tickets Service" <${process.env.EMAIL_USER}>`,
               to: userEmail,
               subject: `Biletele dvs. pentru FC Hermannstadt - Comanda ${orderId}`,
               html: `
@@ -1108,7 +1108,7 @@ app.post("/api/process-payment", async (req, res) => {
                                     <div class="container">
                                         <h2>Mulțumim pentru achiziție!</h2>
                                         <p>Bună ${userName || "Client"},</p>
-                                        <p>Plata dvs. a fost procesată cu succes. Găsiți atașate biletele pentru meciul FC Hermannstadt${
+                                        <p>Plata dvs. a fost procesată cu succes. Găsiți atașate biletele pentru meciul Universitatea Craiova${
                                           awayTeam ? " vs " + awayTeam : ""
                                         }.</p>
                                         
@@ -1139,9 +1139,9 @@ app.post("/api/process-payment", async (req, res) => {
                                         </div>
                                         
                                         <div class="footer">
-                                            <p>Pentru orice întrebări, contactați-ne la: support@gamedaysibiu.ro</p>
+                                            <p>Pentru orice întrebări, contactați-ne la: support@ionoblemencoticketsservice.ro</p>
                                             <p>Vă dorim o experiență plăcută!</p>
-                                            <p><strong>Echipa GameDay Sibiu</strong></p>
+                                            <p><strong>Echipa Ion Oblemenco - Tickets Service</strong></p>
                                         </div>
                                     </div>
                                 </body>
