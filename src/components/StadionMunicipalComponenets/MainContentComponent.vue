@@ -469,9 +469,9 @@ onMounted(async () => {
                 class="text-6xl md:text-8xl font-black text-slate-100 absolute select-none"
                 >VS</span
               >
-              <span class="text-3xl font-bold text-slate-300 relative z-10"
+              <!-- <span class="text-3xl font-bold text-slate-300 relative z-10"
                 >vs</span
-              >
+              > -->
             </div>
 
             <div class="flex flex-col items-center gap-4 w-48">

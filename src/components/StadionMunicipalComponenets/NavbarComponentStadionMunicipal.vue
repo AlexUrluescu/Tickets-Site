@@ -245,7 +245,6 @@ const hideLoginInfo = () => {
 
 
 </style> -->
-
 <script setup>
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
@@ -296,144 +295,195 @@ const hideLoginInfo = () => {
 
 <template>
   <nav
-    style="background-color: #027be6; color: white"
-    class="relative z-50 flex items-center justify-between w-full h-20 px-4 md:px-8 shadow-md font-sans"
+    class="relative z-50 flex items-center justify-between w-full h-20 px-4 md:px-8 shadow-lg font-sans bg-gradient-to-r from-blue-700 via-blue-600 to-blue-800 text-white"
   >
     <div class="flex items-center gap-6">
       <div class="relative group">
-        <img
+        <div
+          class="p-2 rounded-full hover:bg-white/10 transition-colors duration-300 cursor-pointer"
           @click="goToHomePage"
-          style="color: white"
-          src="@/assets/images/Icons/home_icon.png"
-          alt="home_icon"
-          class="h-8 w-8 md:h-10 md:w-10 cursor-pointer transition-transform duration-300 hover:scale-110 hover:brightness-110"
-        />
+        >
+          <img
+            src="@/assets/images/Icons/home_icon.png"
+            alt="home_icon"
+            class="h-6 w-6 md:h-7 md:w-7 brightness-0 invert transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
         <div
           v-if="showContainer"
-          class="absolute bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-50"
-          :style="{ top: `${containerY}px`, left: `${containerX}px` }"
+          class="absolute top-12 left-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-md shadow-xl pointer-events-none whitespace-nowrap z-50"
         >
           Deschide pagina principala
         </div>
       </div>
 
       <a
-        href="https://fchermannstadt.ro"
+        href="https://ucv1948.ro"
         target="_blank"
-        class="flex items-center"
+        class="flex items-center group"
       >
         <img
-          style="margin-top: 10px"
           src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
           alt="universitatea_craiova_logo"
-          class="h-10 md:h-12 w-auto object-contain hover:opacity-90 transition-opacity"
+          class="h-12 md:h-14 w-auto object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:drop-shadow-xl"
         />
       </a>
     </div>
 
-    <h1
-      style="color: white"
-      class="hidden lg:block text-lg xl:text-2xl font-bold text-gray-900 tracking-tight uppercase px-4 truncate"
-    >
-      Cumpără sau rezervă bilete
-      <span
-        style="color: white"
-        class="text-red-700 md:text-white lg:text-gray-900 xl:text-gray-900"
-        >Universitatea Craiova</span
+    <div class="hidden lg:flex flex-col items-center justify-center">
+      <h1
+        class="text-sm font-medium text-blue-200 uppercase tracking-widest mb-0.5"
       >
-    </h1>
+        Shop Oficial
+      </h1>
+      <h2
+        class="text-xl xl:text-2xl font-black text-white tracking-tighter uppercase"
+      >
+        Universitatea <span class="text-blue-200">Craiova</span>
+      </h2>
+    </div>
 
-    <div class="flex items-center gap-4 md:gap-8">
+    <div class="flex items-center gap-6">
       <div class="relative">
         <div
-          class="flex items-center gap-2 cursor-pointer transition-transform duration-300 hover:scale-105 group"
-          v-if="!isLoggedIn"
+          class="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-xl hover:bg-white/10 transition-all duration-300 group border border-transparent hover:border-white/20"
           @mouseenter="showLoginInfo"
           @mouseleave="hideLoginInfo"
         >
-          <img
-            src="@/assets/images/Icons/login_icon.png"
-            alt="login_icon"
-            class="h-8 w-8 brightness-0 invert drop-shadow-md"
-          />
-          <p
-            class="hidden md:block text-white font-semibold text-lg drop-shadow-sm"
+          <div
+            class="bg-blue-800 p-2 rounded-full shadow-inner group-hover:bg-blue-900 transition-colors"
           >
-            Intra în cont
-          </p>
+            <img
+              src="@/assets/images/Icons/login_icon.png"
+              alt="login_icon"
+              class="h-5 w-5 brightness-0 invert"
+            />
+          </div>
+
+          <div class="hidden md:flex flex-col items-start">
+            <span
+              v-if="!isLoggedIn"
+              class="text-xs text-blue-200 font-medium uppercase"
+              >Contul meu</span
+            >
+            <p
+              v-if="!isLoggedIn"
+              class="text-sm font-bold text-white leading-none"
+            >
+              Intră în cont
+            </p>
+
+            <span
+              v-if="isLoggedIn"
+              class="text-xs text-blue-200 font-medium uppercase"
+              >Bine ai venit,</span
+            >
+            <p
+              v-if="isLoggedIn"
+              class="text-sm font-bold text-white leading-none max-w-[120px] truncate"
+            >
+              {{ userName }}
+            </p>
+          </div>
+
           <img
             src="@/assets/images/arrow_down_icon.png"
             alt=""
-            class="h-5 w-5 brightness-0 invert transition-transform group-hover:translate-y-1"
+            class="h-3 w-3 brightness-0 invert opacity-70 transition-transform duration-300 group-hover:rotate-180"
           />
         </div>
 
         <div
-          class="flex items-center gap-2 cursor-pointer transition-transform duration-300 hover:scale-105 group"
-          v-if="isLoggedIn"
-          @mouseenter="showLoginInfo"
-          @mouseleave="hideLoginInfo"
-        >
-          <img
-            src="@/assets/images/Icons/login_icon.png"
-            alt="login_icon"
-            class="h-8 w-8 brightness-0 invert drop-shadow-md"
-          />
-          <p
-            class="hidden md:block text-white font-semibold text-lg drop-shadow-sm max-w-[150px] truncate"
-          >
-            Salut, {{ userName }}
-          </p>
-          <img
-            src="@/assets/images/arrow_down_icon.png"
-            alt=""
-            class="h-5 w-5 brightness-0 invert transition-transform group-hover:translate-y-1"
-          />
-        </div>
-
-        <div
-          class="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col z-50 origin-top-right transition-all"
+          class="absolute top-full right-0 mt-4 w-56 bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden flex flex-col z-50 origin-top-right transition-all transform"
           v-if="showLoginInfoContainer"
           @mouseenter="showLoginInfo"
           @mouseleave="hideLoginInfo"
         >
-          <div v-if="!isLoggedIn" class="flex flex-col">
+          <div v-if="!isLoggedIn" class="flex flex-col p-2">
             <p
               @click="goToLoginPage"
-              class="px-6 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 cursor-pointer font-medium transition-colors text-center border-b border-gray-100"
+              class="flex items-center gap-2 px-4 py-3 text-slate-700 rounded-xl hover:bg-blue-50 hover:text-blue-700 cursor-pointer font-bold transition-colors"
             >
-              Log-in
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-4 h-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 9V5.25a2.25 2.25 0 00-2.25-2.25h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
+                />
+              </svg>
+              Autentificare
             </p>
+            <div class="h-px bg-gray-100 my-1 mx-2"></div>
             <p
               @click="goToLoginPage"
-              class="px-6 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 cursor-pointer font-medium transition-colors text-center"
+              class="flex items-center gap-2 px-4 py-3 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-700 cursor-pointer font-medium transition-colors"
             >
-              Creeaza cont
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-4 h-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3.75 17.25a4.875 4.875 0 004.875-4.875h2.25a4.875 4.875 0 004.875 4.875h-12z"
+                />
+              </svg>
+              Creează cont nou
             </p>
           </div>
 
-          <div v-if="isLoggedIn" class="flex flex-col">
+          <div v-if="isLoggedIn" class="flex flex-col p-2">
             <p
-              style="color: #027be6"
               @click="logout"
-              class="px-6 py-3 cursor-pointer font-bold transition-colors text-center"
+              class="flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 rounded-xl hover:bg-red-100 cursor-pointer font-bold transition-colors text-center"
             >
-              Log out
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-4 h-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M15.75 9V5.25a2.25 2.25 0 00-2.25-2.25h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
+                />
+              </svg>
+              Deconectare
             </p>
           </div>
         </div>
       </div>
 
-      <img
-        src="@/assets/images/Icons/shopping-cart.png"
-        alt="shopping-cart-icon"
-        class="h-8 w-8 md:h-9 md:w-9 cursor-pointer brightness-0 invert drop-shadow-md transition-transform duration-300 hover:scale-110"
-        @click="toggleShoppingCart"
-      />
+      <div class="relative group">
+        <div
+          class="p-2.5 bg-white/10 rounded-full hover:bg-white/20 transition-all duration-300 cursor-pointer shadow-sm border border-white/10"
+          @click="toggleShoppingCart"
+        >
+          <img
+            src="@/assets/images/Icons/shopping-cart.png"
+            alt="shopping-cart-icon"
+            class="h-6 w-6 brightness-0 invert group-hover:scale-110 transition-transform"
+          />
+        </div>
+      </div>
     </div>
   </nav>
 </template>
 
 <style scoped>
-/* No styles needed! All handled by Tailwind CSS */
+/* No extra CSS needed */
 </style>

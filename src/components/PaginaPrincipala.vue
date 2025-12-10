@@ -184,7 +184,6 @@ footer p {
   margin-right: 20px;
 }
 </style> -->
-
 <script setup>
 import { useRouter } from "vue-router";
 
@@ -196,63 +195,83 @@ const goToStadionMunicipal = () => {
 </script>
 
 <template>
-  <div class="relative h-screen w-full overflow-hidden bg-black font-sans">
+  <div class="relative h-screen w-full overflow-hidden bg-slate-900 font-sans">
     <div class="absolute inset-0 z-0">
       <img
         src="@/assets/images/Icons/imagine-fotbal.png"
-        alt="Stadionul Municipal Sibiu"
-        class="w-full h-full object-cover opacity-80 transition-transform duration-[10s] ease-in-out hover:scale-105"
+        alt="Stadionul Ion Oblemenco"
+        class="w-full h-full object-cover opacity-60 transition-transform duration-[20s] ease-linear hover:scale-110"
       />
       <div
-        class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30"
+        class="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-slate-900/60 to-slate-900/30 mix-blend-multiply"
+      ></div>
+
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-blue-500/20 to-transparent pointer-events-none"
       ></div>
     </div>
 
     <div
       class="relative z-10 flex flex-col items-center justify-center h-full text-center px-4"
     >
-      <img
-        src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
-        alt="FC Hermannstadt Logo"
-        class="w-32 h-32 md:w-40 md:h-40 object-contain mb-8 drop-shadow-2xl animate-fade-in-down"
-      />
+      <div class="relative group mb-10">
+        <div
+          class="absolute -inset-1 bg-white/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition duration-1000"
+        ></div>
+        <img
+          src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
+          alt="Universitatea Craiova Logo"
+          class="relative w-36 h-36 md:w-48 md:h-48 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] animate-fade-in-down"
+        />
+      </div>
+
+      <h2
+        class="text-blue-400 font-bold tracking-[0.2em] uppercase text-sm md:text-base mb-2 animate-slide-up"
+      >
+        Campioana Unei Mari Iubiri
+      </h2>
 
       <h1
-        class="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter mb-4 drop-shadow-lg"
+        class="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-6 drop-shadow-2xl leading-tight"
       >
-        Stadionul<br class="md:hidden" />
-        Ion Oblemenco
+        Vulcanul<br />
+        <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white"
+          >Ion Oblemenco</span
+        >
       </h1>
 
       <p
-        style="margin-top: 50px; margin-bottom: 20px"
-        class="text-lg md:text-2xl text-gray-300 font-medium mb-10 max-w-2xl"
+        class="text-lg md:text-2xl text-slate-200 font-medium mb-12 max-w-2xl leading-relaxed"
       >
-        Casa echipei
-        <span style="color: #027be6" class="font-bold"
-          >Universitatea Craiova</span
-        >
+        Aici bate inima Olteniei. Fii alături de
+        <span class="text-blue-400 font-bold">Leii din Bănie</span> la următorul
+        meci.
       </p>
 
       <button
+        style="margin-top: 20px; cursor: pointer"
         @click="goToStadionMunicipal"
-        style="background-color: #027be6"
-        class="group relative px-10 py-4 text-white text-lg font-bold uppercase tracking-widest rounded-full overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(220,38,38,0.6)]"
+        class="group relative px-12 py-5 bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold uppercase tracking-widest rounded-xl overflow-hidden transition-all duration-300 shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:shadow-[0_0_40px_rgba(37,99,235,0.8)] transform hover:-translate-y-1"
       >
-        <span class="relative z-10 flex items-center gap-2">
-          Vezi Evenimente
+        <div
+          class="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[30deg] transition-all duration-700 group-hover:left-full"
+        ></div>
+
+        <span class="relative z-10 flex items-center gap-3">
+          Rezervă-ți Locul
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            stroke-width="2"
+            stroke-width="2.5"
             stroke="currentColor"
-            class="w-5 h-5 transition-transform group-hover:translate-x-1"
+            class="w-5 h-5 transition-transform group-hover:translate-x-2"
           >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+              d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
             />
           </svg>
         </span>
@@ -260,22 +279,38 @@ const goToStadionMunicipal = () => {
     </div>
 
     <footer
-      class="absolute bottom-0 w-full p-6 text-center z-10 border-t border-white/10 bg-black/40 backdrop-blur-sm"
+      class="absolute bottom-0 w-full py-6 px-6 text-center z-10 border-t border-white/5 bg-slate-900/80 backdrop-blur-md"
     >
-      <p class="text-gray-400 text-sm md:text-base">
-        &copy; {{ new Date().getFullYear() }} FC Hermannstadt. Toate drepturile
-        rezervate.
-      </p>
+      <div
+        class="flex flex-col md:flex-row justify-center items-center gap-2 text-slate-400 text-xs md:text-sm"
+      >
+        <span class="font-bold text-white"
+          >&copy; {{ new Date().getFullYear() }} Universitatea Craiova.</span
+        >
+        <span class="hidden md:inline">•</span>
+        <span>Spiritul nu moare niciodată.</span>
+      </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
-/* Optional: Simple animation for the logo */
+/* Custom Animations */
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -285,5 +320,10 @@ const goToStadionMunicipal = () => {
 
 .animate-fade-in-down {
   animation: fadeInDown 1s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 1s ease-out 0.3s forwards; /* 0.3s delay */
+  opacity: 0; /* Start hidden for delay to work */
 }
 </style>

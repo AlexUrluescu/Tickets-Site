@@ -300,7 +300,6 @@ const handleBackButton = () => {
 
 
 </style> -->
-
 <script setup>
 import { reactive } from "vue";
 import { useRouter } from "vue-router";
@@ -402,165 +401,188 @@ const handleBackButton = () => {
 
 <template>
   <div
-    class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans"
+    class="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans"
   >
     <div
-      style="
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-      "
+      class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative"
     >
-      <div class="sm:mx-auto sm:w-full sm:max-w-md">
+      <div
+        class="h-32 bg-blue-600 relative overflow-hidden flex items-center justify-center"
+      >
         <div
-          class="bg-white py-8 px-4 shadow-2xl shadow-gray-200 sm:rounded-2xl sm:px-10 border-t-4 border-red-600 relative"
-        >
-          <div v-if="form.isEmailHidden" class="space-y-6">
-            <div style="text-align: center">
-              <h1
-                style="font-size: 30px"
-                class="text-xl font-bold text-gray-800"
-              >
-                Login
-              </h1>
-            </div>
+          class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"
+        ></div>
+        <div
+          class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500 rounded-full blur-2xl opacity-50"
+        ></div>
 
-            <div style="margin-top: 20px; margin-bottom: 20px">
-              <label for="email" class="block text-sm font-medium text-gray-700"
-                >Email</label
-              >
-              <div class="mt-1">
-                <input
-                  id="email"
-                  type="email"
-                  v-model="form.email"
-                  autofocus
-                  class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
-                  :class="{
-                    'border-red-500 ring-1 ring-red-500': form.eroareEmail,
-                  }"
-                />
-              </div>
-              <p
-                v-if="form.eroareEmail"
-                class="mt-2 text-sm text-red-600 flex items-center gap-1"
-              >
-                <span>⚠</span> {{ form.eroareEmail }}
-              </p>
-            </div>
+        <img
+          src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg"
+          alt="Logo"
+          class="h-20 w-auto object-contain relative z-10 drop-shadow-lg transform translate-y-4"
+        />
+      </div>
 
-            <button
-              style="cursor: pointer"
-              @click="handleContinue"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors uppercase tracking-wider"
+      <div class="px-8 pb-10 pt-12">
+        <div v-if="form.isEmailHidden" class="space-y-6 animate-fade-in">
+          <div class="text-center">
+            <h1
+              class="text-2xl font-black text-slate-800 uppercase tracking-tight"
             >
-              Continuă
-            </button>
+              Bine ai venit
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">
+              Introdu adresa de email pentru a continua
+            </p>
+          </div>
 
-            <div style="margin-top: 60px" class="mt-6">
-              <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                  <div class="w-full border-t border-gray-200"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                  <span class="px-2 bg-white text-gray-500"
-                    >sau intră în cont cu</span
-                  >
-                </div>
-              </div>
-
-              <div
-                style="margin-top: 15px; margin-bottom: 15px"
-                class="mt-6 grid grid-cols-2 gap-3"
+          <div style="margin-top: 20px" class="space-y-2">
+            <label
+              for="email"
+              class="block text-xs font-bold text-slate-500 uppercase ml-1"
+              >Email</label
+            >
+            <div class="relative">
+              <input
+                id="email"
+                type="email"
+                v-model="form.email"
+                autofocus
+                placeholder="nume@exemplu.ro"
+                class="w-full pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800 placeholder-slate-400"
+                :class="{
+                  'border-red-500 ring-1 ring-red-500 bg-red-50':
+                    form.eroareEmail,
+                }"
+              />
+            </div>
+            <p
+              v-if="form.eroareEmail"
+              class="text-xs text-red-600 font-bold ml-1 flex items-center gap-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="w-3 h-3"
               >
-                <button
-                  style="cursor: pointer"
-                  class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-                >
-                  <span class="sr-only">Facebook</span>
-                  <span class="font-bold text-[#1877F2]">Facebook</span>
-                </button>
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {{ form.eroareEmail }}
+            </p>
+          </div>
 
-                <button
-                  style="cursor: pointer"
-                  class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
-                >
-                  <span class="sr-only">Google</span>
-                  <span class="font-bold text-gray-700">Google</span>
-                </button>
-              </div>
+          <button
+            style="margin-top: 20px; cursor: pointer"
+            @click="handleContinue"
+            class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+          >
+            Continuă
+          </button>
 
-              <p class="mt-6 text-center text-xs text-gray-400">
-                Dacă nu aveți cont, îl puteți crea la pasul următor.
-              </p>
+          <div class="relative py-4">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-slate-200"></div>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="px-2 bg-white text-slate-400"
+                >Sau conectează-te cu</span
+              >
             </div>
           </div>
 
-          <div v-if="form.isPasswordHidden" class="space-y-6">
-            <div style="display: flex; flex-direction: column; gap: 20px">
-              <div style="display: flex; align-items: center; gap: 20px">
-                <button
-                  @click="handleBackButton"
-                  class="flex items-center text-sm text-gray-500 hover:text-red-600 transition-colors group"
-                >
-                  <img
-                    style="color: black"
-                    class="transform rotate-180 opacity-60 group-hover:opacity-100 transition-opacity"
-                    src="@/assets/images/Icons/menu_arrow_icon.png"
-                    alt="back"
-                  />
-                  Înapoi
-                </button>
-
-                <div>
-                  <h3
-                    style="font-size: 30px"
-                    class="text-xl font-bold text-gray-800"
-                  >
-                    Bine ai revenit!
-                  </h3>
-                </div>
-              </div>
-              <p class="text-sm text-gray-500 mt-1">
-                Introduceți parola pentru a intra în cont.
-              </p>
-            </div>
-
-            <div style="margin-top: 30px; margin-bottom: 50px">
-              <label
-                for="password"
-                class="block text-sm font-medium text-gray-700"
-                >Parolă</label
-              >
-              <div class="mt-1">
-                <input
-                  id="password"
-                  type="password"
-                  v-model="form.password"
-                  autofocus
-                  class="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
-                  :class="{
-                    'border-red-500 ring-1 ring-red-500': form.eroareParola,
-                  }"
-                />
-              </div>
-              <p
-                v-if="form.eroareParola"
-                class="mt-2 text-sm text-red-600 flex items-center gap-1"
-              >
-                <span>⚠</span> {{ form.eroareParola }}
-              </p>
-            </div>
-
+          <div class="grid grid-cols-2 gap-3">
             <button
-              style="cursor: pointer"
-              @click="handlePasswordContinue"
-              class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-sm text-sm font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors uppercase tracking-wider"
+              class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-600"
             >
-              Intră în cont
+              <span class="text-blue-600">f</span> Facebook
+            </button>
+            <button
+              class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-600"
+            >
+              <span class="text-red-500">G</span> Google
             </button>
           </div>
+
+          <p class="text-center text-xs text-slate-400 mt-4">
+            Contul se va crea automat dacă nu există.
+          </p>
+        </div>
+
+        <div v-if="form.isPasswordHidden" class="space-y-6 animate-slide-in">
+          <div class="flex items-center gap-4 mb-6">
+            <button
+              @click="handleBackButton"
+              class="p-2 -ml-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2.5"
+                stroke="currentColor"
+                class="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                />
+              </svg>
+            </button>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">Parola Ta</h2>
+              <p class="text-xs text-slate-500">{{ form.email }}</p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label
+              for="password"
+              class="block text-xs font-bold text-slate-500 uppercase ml-1"
+              >Parolă</label
+            >
+            <input
+              id="password"
+              type="password"
+              v-model="form.password"
+              autofocus
+              class="w-full pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800 placeholder-slate-400"
+              :class="{
+                'border-red-500 ring-1 ring-red-500 bg-red-50':
+                  form.eroareParola,
+              }"
+            />
+            <p
+              v-if="form.eroareParola"
+              class="text-xs text-red-600 font-bold ml-1 flex items-center gap-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                class="w-3 h-3"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              {{ form.eroareParola }}
+            </p>
+          </div>
+
+          <button
+            @click="handlePasswordContinue"
+            class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+          >
+            Intră în Cont
+          </button>
         </div>
       </div>
     </div>
@@ -568,10 +590,31 @@ const handleBackButton = () => {
 </template>
 
 <style scoped>
-/* We don't need much CSS here because Tailwind handles the styling.
-   We just keep the clean reset.
-*/
-* {
-  box-sizing: border-box;
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 </style>
