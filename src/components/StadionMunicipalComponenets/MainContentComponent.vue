@@ -335,6 +335,7 @@ onMounted(async () => {
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
+import ChatComponent from "../ChatComponent.vue";
 import.meta.url;
 
 defineProps(["openCumparaBilete"]);
@@ -345,8 +346,13 @@ const matchTime = ref("");
 const awayTeamLogo = ref("");
 const allMatches = ref([]);
 const mainMatchId = ref(null);
+const showChat = ref(false);
 
 console.log("awayTeamLogo", awayTeamLogo);
+
+const toggleChat = () => {
+  showChat.value = !showChat.value;
+};
 
 // Funcție pentru verificarea dacă un meci este disponibil pentru achiziționarea de bilete
 const isMatchAvailableForTickets = (matchDateStr) => {
@@ -637,6 +643,43 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+  <div class="fixed bottom-8 right-8 z-50">
+    <button
+      style="cursor: pointer"
+      @click="toggleChat"
+      class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-8 h-8"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <Transition
+    enter-active-class="transition duration-300 ease-out"
+    enter-from-class="translate-y-full opacity-0"
+    enter-to-class="translate-y-0 opacity-100"
+    leave-active-class="transition duration-200 ease-in"
+    leave-from-class="translate-y-0 opacity-100"
+    leave-to-class="translate-y-full opacity-0"
+  >
+    <ChatComponent
+      v-if="showChat"
+      class="fixed bottom-24 right-8 z-50"
+      @close="toggleChat"
+    />
+  </Transition>
 </template>
 
 <style scoped>
