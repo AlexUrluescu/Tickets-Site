@@ -7,6 +7,12 @@ import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import crypto from "crypto";
 import dotenv from "dotenv";
+import multer from "multer";
+import fs from "fs";
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+// import { OpenAIEmbeddings } from "@langchain/openai";
+// import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +21,7 @@ dotenv.config();
 
 app.use(cors());
 app.use(express.json());
+const upload = multer({ dest: "uploads/" });
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -74,7 +81,7 @@ async function createTicketPDF(ticketData) {
           25,
           {
             align: "center",
-          }
+          },
         );
 
       doc
@@ -82,7 +89,7 @@ async function createTicketPDF(ticketData) {
         .text(
           `Data: ${ticketData.matchDate}, Ora: ${ticketData.matchTime}`,
           50,
-          55
+          55,
         )
         .text("Stadion Municipal, Sibiu", 50, 70);
 
@@ -143,24 +150,24 @@ async function createTicketPDF(ticketData) {
         .text(
           "• Biletul trebuie prezentat la poarta si este valabil pentru o singura persoana",
           50,
-          440
+          440,
         )
         .text(
           "• Accesul se face doar prin intrarile indicate pe bilet",
           50,
-          455
+          455,
         )
         .text("• Copiii sub 14 ani trebuie sa prezinte bilet valabil", 50, 470)
         .text(
           "• Acest bilet este valabil numai insotit de un act de identitate",
           50,
-          485
+          485,
         )
         .text("• Falsificarea biletelor se pedepseste conform legii", 50, 500)
         .text(
           "• Pe stadion, spectatorilor le este INTERZIS sa intre cu:",
           50,
-          515
+          515,
         );
 
       const restrictions = [
@@ -201,7 +208,57 @@ async function createTicketPDF(ticketData) {
   });
 }
 
+app.post("/upload-doc", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded." });
+    }
+
+    console.log(`Processing file: ${req.file.originalname}`);
+
+    // 1. Load and Parse the Docx file
+    const loader = new DocxLoader(req.file.path);
+    const docs = await loader.load();
+
+    console.log("docs", docs);
+
+    // 2. Split text into chunks
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+    });
+    const splitDocs = await splitter.splitDocuments(docs);
+
+    console.log("splitDocs", splitDocs);
+
+    // 3. Create Embeddings & Store
+    // Ensure process.env.OPENAI_API_KEY is set
+    // const embeddings = new OpenAIEmbeddings();
+
+    // const vectorStore = await MemoryVectorStore.fromDocuments(
+    //   splitDocs,
+    //   embeddings
+    // );
+
+    // 4. Cleanup: Delete the temp file asynchronously
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Error deleting temp file:", err);
+    });
+
+    res.json({
+      success: true,
+      message: "File processed and embeddings stored!",
+      chunks: splitDocs.length,
+    });
+  } catch (error) {
+    console.error("Error processing document:", error);
+    res.status(500).send("Error processing file");
+  }
+});
+
 app.get("/api/away-team", (req, res) => {
+  console.log("intra");
+
   const now = new Date();
   const currentDate =
     now.getFullYear() +
@@ -225,6 +282,8 @@ app.get("/api/away-team", (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Eroare baza de date" });
       } else {
+        console.log("results", results);
+
         const awayTeamName = results[0]?.awayTeamName || "Echipa necunoscută";
         const awayTeamId = results[0]?.awayTeamId || null;
         const matchId = results[0]?.matchId || null; // ← IMPORTANT: Adaugă această linie
@@ -237,7 +296,7 @@ app.get("/api/away-team", (req, res) => {
 
         res.json({ awayTeamName, awayTeamId, matchId }); // ← IMPORTANT: Include matchId în răspuns
       }
-    }
+    },
   );
 });
 app.get("/api/match-date", (req, res) => {
@@ -261,7 +320,7 @@ app.get("/api/match-date", (req, res) => {
           : "Data nu a fost găsită";
         res.json({ matchDate: formattedDate });
       }
-    }
+    },
   );
 });
 app.get("/api/match-time", (req, res) => {
@@ -282,7 +341,7 @@ app.get("/api/match-time", (req, res) => {
         const matchTime = results[0]?.ora || "Ora nu a fost găsită";
         res.json({ matchTime });
       }
-    }
+    },
   );
 });
 app.get("/api/logos", (req, res) => {
@@ -299,7 +358,7 @@ app.get("/api/logos", (req, res) => {
       } else {
         res.json({ awayTeamLogo: results[0]?.awayTeamLogo || null });
       }
-    }
+    },
   );
 });
 app.get("/api/all-matches", (req, res) => {
@@ -335,7 +394,7 @@ app.get("/api/all-matches", (req, res) => {
       }));
 
       res.json({ matches: formattedMatches });
-    }
+    },
   );
 });
 app.post("/api/check-email", (req, res) => {
@@ -354,7 +413,7 @@ app.post("/api/check-email", (req, res) => {
       } else {
         res.json({ found: 0 });
       }
-    }
+    },
   );
 });
 app.post("/api/check-password", (req, res) => {
@@ -369,7 +428,7 @@ app.post("/api/check-password", (req, res) => {
       } else {
         res.json({ password: results[0]?.password || null });
       }
-    }
+    },
   );
 });
 app.post("/api/get-name", (req, res) => {
@@ -384,7 +443,7 @@ app.post("/api/get-name", (req, res) => {
       } else {
         res.json({ numeUser: results[0]?.numeUser || null });
       }
-    }
+    },
   );
 });
 app.post("/api/add-user", (req, res) => {
@@ -399,302 +458,277 @@ app.post("/api/add-user", (req, res) => {
         return res.status(500).json({ error: "Eroare la server" });
       }
       res.status(201).json({ message: "User adăugat cu succes" });
-    }
+    },
   );
 });
 app.post("/api/populate-bilete", (req, res) => {
-  // First, get all matches
   pool.query("SELECT id FROM meciuri", (err, matches) => {
     if (err) {
       console.error("Eroare la preluarea meciurilor:", err);
       return res.status(500).json({ error: "Eroare la preluarea meciurilor" });
     }
 
-    // Delete existing tickets for all matches
-    const toateSectoarele = [
-      "A1",
-      "A2",
-      "A3",
-      "VIP",
-      "C1",
-      "C2",
-      "C3",
-      "D1",
-      "D2",
-      "D3",
-      "D4",
-      "D5",
-      "B1",
-      "B2",
-      "B3",
-    ];
-    pool.query(
-      `DELETE FROM bilete WHERE sector IN (${toateSectoarele
-        .map(() => "?")
-        .join(",")})`,
-      toateSectoarele,
-      (err) => {
-        if (err) {
-          console.error("Eroare la ștergere:", err);
-          return res.status(500).json({ error: "Eroare la ștergere" });
-        }
+    // FIX: TRUNCATE șterge TOT, evitând duplicate
+    pool.query(`TRUNCATE TABLE bilete`, (err) => {
+      if (err) {
+        console.error("Eroare la ștergere:", err);
+        return res.status(500).json({ error: "Eroare la ștergere" });
+      }
 
-        const zone = [
-          // TRIBUNA 1
+      const zone = [
+        // TRIBUNA 1
+        {
+          zona: "TRIBUNA 1",
+          sector: "A1",
+          randuri: [1, 6],
+          locuriPerRand: 69,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A1",
+          randuri: [7, 11],
+          locuriPerRand: 63,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A1",
+          randuri: [12, 17],
+          locuriPerRand: 12,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A2",
+          randuri: [1, 4],
+          locuriPerRand: 52,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A2",
+          randuri: [5, 6],
+          locuriPerRand: 64,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A2",
+          randuri: [7, 11],
+          locuriPerRand: 54,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A3",
+          randuri: [1, 6],
+          locuriPerRand: 69,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A3",
+          randuri: [7, 11],
+          locuriPerRand: 58,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "A3",
+          randuri: [12, 17],
+          locuriPerRand: 12,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 1",
+          sector: "VIP",
+          randuri: [1, 6],
+          locuriPerRand: 66,
+          pret: 100.0,
+        },
+
+        // TRIBUNA 2
+        {
+          zona: "TRIBUNA 2",
+          sector: "C1",
+          randuri: [1, 10],
+          locuriPerRand: 54,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C1",
+          randuri: [11, 13],
+          locuriPerRand: 44,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C1",
+          randuri: [14, 24],
+          locuriPerRand: 53,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C2",
+          randuri: [1, 10],
+          locuriPerRand: 54,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C2",
+          randuri: [11, 13],
+          locuriPerRand: 44,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C2",
+          randuri: [14, 24],
+          locuriPerRand: 53,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C3",
+          randuri: [1, 10],
+          locuriPerRand: 54,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C3",
+          randuri: [11, 13],
+          locuriPerRand: 44,
+          pret: 50.0,
+        },
+        {
+          zona: "TRIBUNA 2",
+          sector: "C3",
+          randuri: [14, 24],
+          locuriPerRand: 53,
+          pret: 50.0,
+        },
+
+        // PELUZA NORD
+        ...["D1", "D2", "D3", "D4", "D5"].flatMap((sector) => [
           {
-            zona: "TRIBUNA 1",
-            sector: "A1",
-            randuri: [1, 6],
-            locuriPerRand: 69,
-            pret: 50.0,
+            zona: "PELUZA NORD",
+            sector,
+            randuri: [7, 8],
+            locuriPerRand: 41,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 1",
-            sector: "A1",
-            randuri: [7, 11],
-            locuriPerRand: 63,
-            pret: 50.0,
+            zona: "PELUZA NORD",
+            sector,
+            randuri: [9, 9],
+            locuriPerRand: 42,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 1",
-            sector: "A1",
-            randuri: [12, 17],
-            locuriPerRand: 12,
-            pret: 50.0,
+            zona: "PELUZA NORD",
+            sector,
+            randuri: [10, 10],
+            locuriPerRand: 45,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 1",
-            sector: "A2",
-            randuri: [1, 4],
+            zona: "PELUZA NORD",
+            sector,
+            randuri: [11, 13],
             locuriPerRand: 52,
-            pret: 50.0,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 1",
-            sector: "A2",
-            randuri: [5, 6],
-            locuriPerRand: 64,
-            pret: 50.0,
+            zona: "PELUZA NORD",
+            sector,
+            randuri: [14, 19],
+            locuriPerRand: 56,
+            pret: 30.0,
           },
-          {
-            zona: "TRIBUNA 1",
-            sector: "A2",
-            randuri: [7, 11],
-            locuriPerRand: 54,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 1",
-            sector: "A3",
-            randuri: [1, 6],
-            locuriPerRand: 69,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 1",
-            sector: "A3",
-            randuri: [7, 11],
-            locuriPerRand: 58,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 1",
-            sector: "A3",
-            randuri: [12, 17],
-            locuriPerRand: 12,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 1",
-            sector: "VIP",
-            randuri: [1, 6],
-            locuriPerRand: 66,
-            pret: 100.0,
-          },
+        ]),
 
-          // TRIBUNA 2
+        // PELUZA SUD
+        ...["B1", "B2", "B3"].flatMap((sector) => [
           {
-            zona: "TRIBUNA 2",
-            sector: "C1",
-            randuri: [1, 10],
-            locuriPerRand: 54,
-            pret: 50.0,
+            zona: "PELUZA SUD",
+            sector,
+            randuri: [7, 8],
+            locuriPerRand: 41,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 2",
-            sector: "C1",
+            zona: "PELUZA SUD",
+            sector,
+            randuri: [9, 9],
+            locuriPerRand: 42,
+            pret: 30.0,
+          },
+          {
+            zona: "PELUZA SUD",
+            sector,
+            randuri: [10, 10],
+            locuriPerRand: 45,
+            pret: 30.0,
+          },
+          {
+            zona: "PELUZA SUD",
+            sector,
             randuri: [11, 13],
-            locuriPerRand: 44,
-            pret: 50.0,
+            locuriPerRand: 52,
+            pret: 30.0,
           },
           {
-            zona: "TRIBUNA 2",
-            sector: "C1",
-            randuri: [13, 24],
-            locuriPerRand: 53,
-            pret: 50.0,
+            zona: "PELUZA SUD",
+            sector,
+            randuri: [14, 19],
+            locuriPerRand: 56,
+            pret: 30.0,
           },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C2",
-            randuri: [1, 10],
-            locuriPerRand: 54,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C2",
-            randuri: [11, 13],
-            locuriPerRand: 44,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C2",
-            randuri: [13, 24],
-            locuriPerRand: 53,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C3",
-            randuri: [1, 10],
-            locuriPerRand: 54,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C3",
-            randuri: [11, 13],
-            locuriPerRand: 44,
-            pret: 50.0,
-          },
-          {
-            zona: "TRIBUNA 2",
-            sector: "C3",
-            randuri: [13, 24],
-            locuriPerRand: 53,
-            pret: 50.0,
-          },
+        ]),
+      ];
 
-          // PELUZA NORD
-          ...["D1", "D2", "D3", "D4", "D5"].flatMap((sector) => [
-            {
-              zona: "PELUZA NORD",
-              sector,
-              randuri: [7, 8],
-              locuriPerRand: 41,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA NORD",
-              sector,
-              randuri: [9, 9],
-              locuriPerRand: 42,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA NORD",
-              sector,
-              randuri: [10, 10],
-              locuriPerRand: 45,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA NORD",
-              sector,
-              randuri: [11, 13],
-              locuriPerRand: 52,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA NORD",
-              sector,
-              randuri: [14, 19],
-              locuriPerRand: 56,
-              pret: 30.0,
-            },
-          ]),
+      const bilete = [];
 
-          // PELUZA SUD
-          ...["B1", "B2", "B3"].flatMap((sector) => [
-            {
-              zona: "PELUZA SUD",
-              sector,
-              randuri: [7, 8],
-              locuriPerRand: 41,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA SUD",
-              sector,
-              randuri: [9, 9],
-              locuriPerRand: 42,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA SUD",
-              sector,
-              randuri: [10, 10],
-              locuriPerRand: 45,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA SUD",
-              sector,
-              randuri: [11, 13],
-              locuriPerRand: 52,
-              pret: 30.0,
-            },
-            {
-              zona: "PELUZA SUD",
-              sector,
-              randuri: [14, 19],
-              locuriPerRand: 56,
-              pret: 30.0,
-            },
-          ]),
-        ];
-
-        const bilete = [];
-
-        // Create tickets for EACH match
-        matches.forEach((match) => {
-          for (const z of zone) {
-            for (let rand = z.randuri[0]; rand <= z.randuri[1]; rand++) {
-              for (let loc = 1; loc <= z.locuriPerRand; loc++) {
-                bilete.push([
-                  z.zona,
-                  z.sector,
-                  rand,
-                  loc,
-                  "disponibil",
-                  z.pret,
-                  match.id,
-                ]);
-              }
+      matches.forEach((match) => {
+        for (const z of zone) {
+          for (let rand = z.randuri[0]; rand <= z.randuri[1]; rand++) {
+            for (let loc = 1; loc <= z.locuriPerRand; loc++) {
+              bilete.push([
+                z.zona,
+                z.sector,
+                rand,
+                loc,
+                "disponibil",
+                z.pret,
+                match.id,
+              ]);
             }
           }
-        });
+        }
+      });
 
-        const insertQuery = `
-                INSERT INTO bilete (zona, sector, rand, loc, status, pret, match_id)
-                VALUES ?
-            `;
+      const insertQuery = `
+        INSERT INTO bilete (zona, sector, rand, loc, status, pret, match_id)
+        VALUES ?
+      `;
 
-        pool.query(insertQuery, [bilete], (err, result) => {
-          if (err) {
-            console.error("Eroare la inserare bilete:", err);
-            return res.status(500).json({ error: "Eroare la inserare bilete" });
-          }
-          res.status(200).json({
-            message: "Biletele au fost inserate cu succes",
-            inserate: result.affectedRows,
-            meciuri: matches.length,
-          });
+      pool.query(insertQuery, [bilete], (err, result) => {
+        if (err) {
+          console.error("Eroare la inserare bilete:", err);
+          return res.status(500).json({ error: "Eroare la inserare bilete" });
+        }
+        res.status(200).json({
+          message: "Biletele au fost inserate cu succes",
+          inserate: result.affectedRows,
+          meciuri: matches.length,
         });
-      }
-    );
+      });
+    });
   });
 });
 app.get("/api/dev/populeaza", (req, res) => {
@@ -738,14 +772,14 @@ app.get("/api/sector-info", (req, res) => {
       // Anti-caching headers
       res.setHeader(
         "Cache-Control",
-        "no-store, no-cache, must-revalidate, proxy-revalidate"
+        "no-store, no-cache, must-revalidate, proxy-revalidate",
       );
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
       res.setHeader("Surrogate-Control", "no-store");
 
       res.json({ disponibile, pret });
-    }
+    },
   );
 });
 
@@ -770,14 +804,14 @@ app.get("/api/seats", (req, res) => {
       // Anti-caching headers
       res.setHeader(
         "Cache-Control",
-        "no-store, no-cache, must-revalidate, proxy-revalidate"
+        "no-store, no-cache, must-revalidate, proxy-revalidate",
       );
       res.setHeader("Pragma", "no-cache");
       res.setHeader("Expires", "0");
       res.setHeader("Surrogate-Control", "no-store");
 
       res.json(results);
-    }
+    },
   );
 });
 
@@ -799,7 +833,7 @@ app.post("/api/update-seats-status", (req, res) => {
     "Actualizare stare locuri pentru meciul:",
     matchId,
     "locuri:",
-    seats
+    seats,
   );
 
   const updatePromises = seats.map((seatInfo) => {
@@ -831,7 +865,7 @@ app.post("/api/update-seats-status", (req, res) => {
       }
 
       console.log(
-        `Actualizare loc pentru meciul ${matchId}: Sector ${sector}, Rand ${rand}, Loc ${loc}`
+        `Actualizare loc pentru meciul ${matchId}: Sector ${sector}, Rand ${rand}, Loc ${loc}`,
       );
 
       // Include match_id in the update query
@@ -844,11 +878,11 @@ app.post("/api/update-seats-status", (req, res) => {
             reject(err);
           } else {
             console.log(
-              `Actualizat cu succes pentru meciul ${matchId}: Sector ${sector}, Rand ${rand}, Loc ${loc}`
+              `Actualizat cu succes pentru meciul ${matchId}: Sector ${sector}, Rand ${rand}, Loc ${loc}`,
             );
             resolve(result);
           }
-        }
+        },
       );
     });
   });
@@ -857,7 +891,7 @@ app.post("/api/update-seats-status", (req, res) => {
     .then(() => {
       console.log(
         "Toate locurile au fost actualizate cu succes pentru meciul:",
-        matchId
+        matchId,
       );
       res.status(200).json({
         success: true,
@@ -899,7 +933,7 @@ app.get("/api/update-sector-info", (req, res) => {
       const disponibile = results[0].disponibile;
       const pret = results[0].pret;
       res.json({ disponibile, pret });
-    }
+    },
   );
 });
 
@@ -1016,7 +1050,7 @@ app.post("/api/process-payment", async (req, res) => {
                   } else {
                     resolve();
                   }
-                }
+                },
               );
             });
 
@@ -1035,11 +1069,11 @@ app.post("/api/process-payment", async (req, res) => {
                         console.error("Eroare la actualizarea locului:", err);
                       } else {
                         console.log(
-                          `Loc actualizat pentru meciul ${matchId}: Sector ${item.sector}, Rand ${rand}, Loc ${loc}`
+                          `Loc actualizat pentru meciul ${matchId}: Sector ${item.sector}, Rand ${rand}, Loc ${loc}`,
                         );
                       }
                       resolve();
-                    }
+                    },
                   );
                 });
               }
@@ -1117,13 +1151,13 @@ app.post("/api/process-payment", async (req, res) => {
                                             <ul>
                                                 <li><strong>ID Comandă:</strong> ${orderId}</li>
                                                 <li><strong>Data plății:</strong> ${new Date().toLocaleString(
-                                                  "ro-RO"
+                                                  "ro-RO",
                                                 )}</li>
                                                 <li><strong>Total plătit:</strong> ${totalAmount} RON</li>
                                                 <li><strong>Număr bilete:</strong> ${items.reduce(
                                                   (sum, item) =>
                                                     sum + item.numarBilete,
-                                                  0
+                                                  0,
                                                 )}</li>
                                             </ul>
                                         </div>
@@ -1179,7 +1213,7 @@ app.post("/api/process-payment", async (req, res) => {
             error: "Eroare la procesarea biletelor",
           });
         }
-      }
+      },
     );
   } catch (error) {
     console.error("Eroare generală:", error);
