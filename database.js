@@ -11,13 +11,14 @@ import multer from "multer";
 import fs from "fs";
 import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-// import { OpenAIEmbeddings } from "@langchain/openai";
-// import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 dotenv.config();
+
+const OLLAMA_URL = "http://localhost:11434/api/generate";
+const OLLAMA_MODEL = "llama3.2";
 
 app.use(cors());
 app.use(express.json());
@@ -216,31 +217,18 @@ app.post("/upload-doc", upload.single("file"), async (req, res) => {
 
     console.log(`Processing file: ${req.file.originalname}`);
 
-    // 1. Load and Parse the Docx file
     const loader = new DocxLoader(req.file.path);
     const docs = await loader.load();
 
-    console.log("docs", docs);
 
-    // 2. Split text into chunks
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 200,
     });
     const splitDocs = await splitter.splitDocuments(docs);
 
-    console.log("splitDocs", splitDocs);
 
-    // 3. Create Embeddings & Store
-    // Ensure process.env.OPENAI_API_KEY is set
-    // const embeddings = new OpenAIEmbeddings();
-
-    // const vectorStore = await MemoryVectorStore.fromDocuments(
-    //   splitDocs,
-    //   embeddings
-    // );
-
-    // 4. Cleanup: Delete the temp file asynchronously
+  
     fs.unlink(req.file.path, (err) => {
       if (err) console.error("Error deleting temp file:", err);
     });
@@ -257,7 +245,6 @@ app.post("/upload-doc", upload.single("file"), async (req, res) => {
 });
 
 app.get("/api/away-team", (req, res) => {
-  console.log("intra");
 
   const now = new Date();
   const currentDate =
@@ -282,19 +269,12 @@ app.get("/api/away-team", (req, res) => {
         console.error(err);
         res.status(500).json({ error: "Eroare baza de date" });
       } else {
-        console.log("results", results);
 
         const awayTeamName = results[0]?.awayTeamName || "Echipa necunoscută";
         const awayTeamId = results[0]?.awayTeamId || null;
-        const matchId = results[0]?.matchId || null; // ← IMPORTANT: Adaugă această linie
+        const matchId = results[0]?.matchId || null;
 
-        console.log("API away-team returnează:", {
-          awayTeamName,
-          awayTeamId,
-          matchId,
-        }); // Debug
-
-        res.json({ awayTeamName, awayTeamId, matchId }); // ← IMPORTANT: Include matchId în răspuns
+        res.json({ awayTeamName, awayTeamId, matchId }); 
       }
     },
   );
@@ -801,7 +781,7 @@ app.get("/api/seats", (req, res) => {
         return res.status(500).json({ error: "db error" });
       }
 
-      // Anti-caching headers
+   
       res.setHeader(
         "Cache-Control",
         "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -815,7 +795,7 @@ app.get("/api/seats", (req, res) => {
   );
 });
 
-// Endpoint pentru actualizarea stării locurilor rezervate
+
 app.post("/api/update-seats-status", (req, res) => {
   const { seats, matchId } = req.body;
 
@@ -868,7 +848,6 @@ app.post("/api/update-seats-status", (req, res) => {
         `Actualizare loc pentru meciul ${matchId}: Sector ${sector}, Rand ${rand}, Loc ${loc}`,
       );
 
-      // Include match_id in the update query
       pool.query(
         'UPDATE bilete SET status = "rezervat" WHERE sector = ? AND rand = ? AND loc = ? AND match_id = ?',
         [sector, rand, loc, matchId],
@@ -904,7 +883,6 @@ app.post("/api/update-seats-status", (req, res) => {
     });
 });
 
-// Endpoint pentru a actualiza numărul de bilete disponibile pentru un sector
 app.get("/api/update-sector-info", (req, res) => {
   const sector = req.query.sector;
   const matchId = req.query.matchId;
@@ -1400,6 +1378,152 @@ app.post("/api/admin/add-match", checkAdmin, (req, res) => {
         });
     }
   );
+});
+
+
+function dbQuery(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    pool.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+}
+
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: "Mesajul este gol" });
+    }
+
+    console.log("[AI Chat] Întrebare primită:", message);
+
+    const currentDate = new Date().toISOString().split("T")[0];
+
+    const matches = await dbQuery(
+      `SELECT m.id, m.data, m.ora, e.nume AS awayTeamName
+       FROM meciuri m
+       JOIN echipe e ON m.echipa_deplasare_id = e.id
+       WHERE m.data >= ?
+       ORDER BY m.data ASC`,
+      [currentDate]
+    );
+
+    let sectorInfo = [];
+    if (matches.length > 0) {
+      sectorInfo = await dbQuery(
+        `SELECT zona, sector, COUNT(*) AS locuri_disponibile, MAX(pret) AS pret
+         FROM bilete
+         WHERE match_id = ? AND status = 'disponibil'
+         GROUP BY zona, sector
+         ORDER BY zona, sector`,
+        [matches[0].id]
+      );
+    }
+
+    const totalAvailable = await dbQuery(
+      `SELECT m.id AS match_id, e.nume AS awayTeamName, m.data, m.ora,
+              COUNT(b.id) AS locuri_disponibile
+       FROM meciuri m
+       JOIN echipe e ON m.echipa_deplasare_id = e.id
+       LEFT JOIN bilete b ON b.match_id = m.id AND b.status = 'disponibil'
+       WHERE m.data >= ?
+       GROUP BY m.id, e.nume, m.data, m.ora
+       ORDER BY m.data ASC`,
+      [currentDate]
+    );
+
+    const matchesContext = matches.length > 0
+      ? matches.map((m) => {
+          const dateStr = new Date(m.data).toLocaleDateString("ro-RO", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          return `- Universitatea Craiova vs ${m.awayTeamName} | Data: ${dateStr} | Ora: ${m.ora}`;
+        }).join("\n")
+      : "Nu sunt meciuri programate în viitorul apropiat.";
+
+    const sectorContext = sectorInfo.length > 0
+      ? sectorInfo.map((s) =>
+          `- ${s.zona}, Sector ${s.sector}: ${s.locuri_disponibile} locuri disponibile, Preț: ${s.pret} RON`
+        ).join("\n")
+      : "Nu sunt informații disponibile despre locuri.";
+
+    const availabilityContext = totalAvailable.length > 0
+      ? totalAvailable.map((t) => {
+          const dateStr = new Date(t.data).toLocaleDateString("ro-RO", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+          return `- vs ${t.awayTeamName} (${dateStr}): ${t.locuri_disponibile} locuri disponibile`;
+        }).join("\n")
+      : "";
+
+    const systemPrompt = `Ești asistentul virtual al stadionului "Ion Oblemenco" din Craiova, pentru echipa Universitatea Craiova.
+
+REGULI STRICTE:
+1. Răspunde STRICT și EXCLUSIV la mesajul utilizatorului. Nu oferi detalii nesolicitate!
+2. Dacă utilizatorul te salută (ex: "Salut", "Bună", "Hello"), răspunde-i DOAR cu un salut scurt și întreabă-l cum îl poți ajuta. NU înșira toată lista de meciuri sau prețuri!
+3. Datele de mai jos reprezintă un CONTEXT SECRET acordat ție. Folosește aceste date DOAR pentru a găsi răspunsul specific la ceea ce a întrebat utilizatorul. Nu le printa ca o listă.
+4. Răspunde scurt, la obiect, prietenos și OBLIGATORIU în limba română.
+5. Fără formatare (fără bold, italic, stele etc.) - folosește exclusiv text simplu.
+
+=== CONTEXT SECRET ===
+[MECIURI PROGRAMATE]
+${matchesContext}
+
+[DISPONIBILITATE LOCURI PENTRU URMĂTORUL MECI]
+${sectorContext}
+
+[DISPONIBILITATE GENERALĂ]
+${availabilityContext}
+
+[INFORMAȚII STADION]
+- Nume: Stadionul "Ion Oblemenco", Craiova
+- Zone: TRIBUNA 1 (A1, A2, A3, VIP), TRIBUNA 2 (C1, C2, C3), PELUZA NORD (D1-D5), PELUZA SUD (B1-B3)
+- Prețuri: Trib. 1/2 = 50 RON, VIP = 100 RON, Peluza N/S = 30 RON
+- Achiziție: Biletele se pot cumpăra de pe acest site.
+
+Mesajul utilizatorului: "${message}"`;
+
+console.log("Se trimite cererea către Ollama...");
+
+    const ollamaResponse = await fetch(OLLAMA_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        prompt: systemPrompt,
+        stream: false,
+      }),
+    });
+
+    if (!ollamaResponse.ok) {
+        throw new Error(`Ollama API error: ${ollamaResponse.status}`);
+    }
+
+    const data = await ollamaResponse.json();
+    const aiText = data.response;
+
+    console.log("[AI Chat] Răspuns generat cu succes de Ollama");
+
+    res.json({ response: aiText });
+  } catch (error) {
+    console.error("[AI Chat] Eroare:", error);
+    res.status(500).json({
+      error: "Eroare la generarea răspunsului",
+      response:
+        "Îmi pare rău, am întâmpinat o problemă tehnică. Te rog să încerci din nou sau să contactezi casa de bilete pentru asistență.",
+    });
+  }
 });
 
 app.listen(PORT, () => {

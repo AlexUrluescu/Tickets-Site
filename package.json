@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@langchain/community": "^1.0.7",
     "@langchain/core": "^1.1.4",
     "@langchain/openai": "^1.1.3",
