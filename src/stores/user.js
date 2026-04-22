@@ -7,7 +7,9 @@ export const useUserStore = defineStore('user', {
     }),
     getters: {
         isLoggedIn: (state) => !!state.user,
-        userName: (state) => state.user?.name || ''
+        userName: (state) => state.user?.name || '',
+        isAdmin: (state) => state.user?.role === 'admin',
+        userRole: (state) => state.user?.role || 'user',
     },
     actions: {
         login(token, userData) {
@@ -21,6 +23,7 @@ export const useUserStore = defineStore('user', {
             this.token = null;
             localStorage.removeItem('token');
             localStorage.removeItem('userName');
+            localStorage.removeItem('userEmail');
         }
     }
 });

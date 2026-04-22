@@ -419,14 +419,14 @@ app.post("/api/check-email", (req, res) => {
 app.post("/api/check-password", (req, res) => {
   const { email } = req.body;
   pool.query(
-    `SELECT password FROM users WHERE email = ?`,
+    `SELECT password, role FROM users WHERE email = ?`,
     [email],
     (err, results) => {
       if (err) {
         console.error("Eroare la verificarea parolei:", err);
         return res.status(500).json({ error: "Eroare la server" });
       } else {
-        res.json({ password: results[0]?.password || null });
+        res.json({ password: results[0]?.password || null, role: results[0]?.role || 'user' });
       }
     },
   );
@@ -434,14 +434,14 @@ app.post("/api/check-password", (req, res) => {
 app.post("/api/get-name", (req, res) => {
   const { email } = req.body;
   pool.query(
-    `SELECT nume AS numeUser FROM users WHERE email = ?`,
+    `SELECT nume AS numeUser, role FROM users WHERE email = ?`,
     [email],
     (err, results) => {
       if (err) {
         console.error("Eroare la preluarea numelui", err);
         return res.status(500).json({ error: "Eroare la server" });
       } else {
-        res.json({ numeUser: results[0]?.numeUser || null });
+        res.json({ numeUser: results[0]?.numeUser || null, role: results[0]?.role || 'user' });
       }
     },
   );
@@ -450,8 +450,8 @@ app.post("/api/add-user", (req, res) => {
   const { username, email, password } = req.body;
 
   pool.query(
-    `INSERT INTO users (email,password,nume) VALUES (?,?,?)`,
-    [email, password, username],
+    `INSERT INTO users (email,password,nume,role) VALUES (?,?,?,?)`,
+    [email, password, username, 'user'],
     (err, results) => {
       if (err) {
         console.error("Eroare la adaugarea username-ului", err);
@@ -1232,6 +1232,176 @@ app.get("/api/test-payment", (req, res) => {
     method: "POST",
   });
 });
+
+// ==========================================
+// ADMIN ENDPOINTS
+// ==========================================
+
+// Middleware simplu de verificare admin (prin email din query/body)
+const checkAdmin = (req, res, next) => {
+  const email = req.query.email || req.body.email;
+  if (!email) {
+    return res.status(401).json({ error: "Email lipsă" });
+  }
+  pool.query(
+    "SELECT role FROM users WHERE email = ?",
+    [email],
+    (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(401).json({ error: "Utilizator negăsit" });
+      }
+      if (results[0].role !== "admin") {
+        return res.status(403).json({ error: "Acces interzis - nu ești admin" });
+      }
+      next();
+    }
+  );
+};
+
+// Admin - Statistici generale
+app.get("/api/admin/stats", checkAdmin, (req, res) => {
+  const queries = {
+    totalBilete: "SELECT COUNT(*) AS total FROM purchased_tickets",
+    totalVenituri: "SELECT COALESCE(SUM(total_amount), 0) AS total FROM orders WHERE status = 'completed'",
+    totalMeciuri: `SELECT COUNT(*) AS total FROM meciuri WHERE data >= CURDATE()`,
+    totalUseri: "SELECT COUNT(*) AS total FROM users",
+  };
+
+  const results = {};
+  let completed = 0;
+  const keys = Object.keys(queries);
+
+  keys.forEach((key) => {
+    pool.query(queries[key], (err, rows) => {
+      if (err) {
+        console.error(`Eroare la ${key}:`, err);
+        results[key] = 0;
+      } else {
+        results[key] = rows[0]?.total || 0;
+      }
+      completed++;
+      if (completed === keys.length) {
+        res.json(results);
+      }
+    });
+  });
+});
+
+// Admin - Bilete vândute
+app.get("/api/admin/sold-tickets", checkAdmin, (req, res) => {
+  const matchId = req.query.matchId;
+  let query = `
+    SELECT pt.ticket_id, pt.sector, pt.tribuna, pt.rand, pt.locuri, 
+           pt.numar_bilete, pt.pret, pt.invitation_code,
+           o.order_id, o.user_email, o.user_name, o.total_amount, o.created_at,
+           e.nume AS awayTeamName, m.data AS matchDate, m.ora AS matchTime
+    FROM purchased_tickets pt
+    JOIN orders o ON pt.order_id = o.order_id
+    LEFT JOIN meciuri m ON pt.match_id = m.id
+    LEFT JOIN echipe e ON m.echipa_deplasare_id = e.id
+  `;
+  const params = [];
+
+  if (matchId) {
+    query += " WHERE pt.match_id = ?";
+    params.push(matchId);
+  }
+
+  query += " ORDER BY o.created_at DESC";
+
+  pool.query(query, params, (err, results) => {
+    if (err) {
+      console.error("Eroare la preluarea biletelor vândute:", err);
+      return res.status(500).json({ error: "Eroare server" });
+    }
+    res.json({ tickets: results });
+  });
+});
+
+// Admin - Lista echipe
+app.get("/api/admin/teams", checkAdmin, (req, res) => {
+  pool.query("SELECT id, nume, logo_url FROM echipe ORDER BY nume ASC", (err, results) => {
+    if (err) {
+      console.error("Eroare la preluarea echipelor:", err);
+      return res.status(500).json({ error: "Eroare server" });
+    }
+    res.json({ teams: results });
+  });
+});
+
+// Admin - Adaugă echipă
+app.post("/api/admin/add-team", checkAdmin, (req, res) => {
+  const { nume, logo_url } = req.body;
+  if (!nume) {
+    return res.status(400).json({ error: "Numele echipei este obligatoriu" });
+  }
+  pool.query(
+    "INSERT INTO echipe (nume, logo_url) VALUES (?, ?)",
+    [nume, logo_url || null],
+    (err, result) => {
+      if (err) {
+        console.error("Eroare la adăugarea echipei:", err);
+        return res.status(500).json({ error: "Eroare server" });
+      }
+      res.status(201).json({ message: "Echipă adăugată cu succes", id: result.insertId });
+    }
+  );
+});
+
+// Admin - Lista meciuri (toate, inclusiv trecute)
+app.get("/api/admin/matches", checkAdmin, (req, res) => {
+  pool.query(
+    `SELECT m.id, m.data, m.ora, e.nume AS awayTeamName, e.logo_url AS awayTeamLogo
+     FROM meciuri m
+     JOIN echipe e ON m.echipa_deplasare_id = e.id
+     ORDER BY m.data DESC`,
+    (err, results) => {
+      if (err) {
+        console.error("Eroare la preluarea meciurilor:", err);
+        return res.status(500).json({ error: "Eroare server" });
+      }
+      const formattedMatches = results.map((match) => ({
+        id: match.id,
+        matchDate: new Date(match.data).toISOString().split("T")[0],
+        matchTime: match.ora,
+        awayTeamName: match.awayTeamName,
+        awayTeamLogo: match.awayTeamLogo,
+      }));
+      res.json({ matches: formattedMatches });
+    }
+  );
+});
+
+// Admin - Adaugă meci
+app.post("/api/admin/add-match", checkAdmin, (req, res) => {
+  const { data, ora, echipa_deplasare_id } = req.body;
+  if (!data || !ora || !echipa_deplasare_id) {
+    return res.status(400).json({ error: "Toate câmpurile sunt obligatorii (data, ora, echipa_deplasare_id)" });
+  }
+  pool.query(
+    "INSERT INTO meciuri (data, ora, echipa_deplasare_id) VALUES (?, ?, ?)",
+    [data, ora, echipa_deplasare_id],
+    (err, result) => {
+      if (err) {
+        console.error("Eroare la adăugarea meciului:", err);
+        return res.status(500).json({ error: "Eroare server" });
+      }
+      // Populare automată bilete pentru noul meci
+      const matchId = result.insertId;
+      fetch(`http://localhost:${PORT}/api/populate-bilete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(() => {
+          res.status(201).json({ message: "Meci adăugat și bilete populate cu succes", id: matchId });
+        })
+        .catch(() => {
+          res.status(201).json({ message: "Meci adăugat dar eroare la popularea biletelor", id: matchId });
+        });
+    }
+  );
+});
+
 app.listen(PORT, () => {
   console.log(`Serverul rulează la http://localhost:${PORT}`);
 });

@@ -379,13 +379,18 @@ const handlePasswordContinue = async () => {
     if (form.password === passwordData.password) {
       console.log("Parola este identica!");
       const token = "dummy-token";
-      const userData = { name: nameData.numeUser };
+      const role = nameData.role || passwordData.role || "user";
+      const userData = { name: nameData.numeUser, role: role };
 
-      // Salvează email-ul în localStorage
       localStorage.setItem("userEmail", form.email);
 
       userStore.login(token, userData);
-      router.push({ name: "StadionMunicipal" });
+
+      if (role === "admin") {
+        router.push({ name: "PaginaAdmin" });
+      } else {
+        router.push({ name: "StadionMunicipal" });
+      }
     } else {
       form.eroareParola = "Parola este incorectă!";
     }

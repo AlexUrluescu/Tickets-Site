@@ -255,7 +255,7 @@ import { ref } from "vue";
 const router = useRouter();
 const userStore = useUserStore();
 const shoppingCartStore = useShoppingCartStore();
-const { isLoggedIn, userName } = storeToRefs(userStore);
+const { isLoggedIn, userName, isAdmin } = storeToRefs(userStore);
 const goToHomePage = () => {
   router.push("/");
 };
@@ -266,6 +266,10 @@ const goToLoginPage = () => {
 const logout = () => {
   userStore.logout();
   router.push("/");
+};
+
+const goToAdmin = () => {
+  router.push("/admin");
 };
 
 const toggleShoppingCart = () => {
@@ -444,6 +448,28 @@ const hideLoginInfo = () => {
           </div>
 
           <div v-if="isLoggedIn" class="flex flex-col p-2">
+            <p
+              v-if="isAdmin"
+              @click="goToAdmin"
+              class="flex items-center gap-2 px-4 py-3 text-slate-700 rounded-xl hover:bg-blue-50 hover:text-blue-700 cursor-pointer font-bold transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="w-4 h-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
+                />
+              </svg>
+              Admin Dashboard
+            </p>
+            <div v-if="isAdmin" class="h-px bg-gray-100 my-1 mx-2"></div>
             <p
               @click="logout"
               class="flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 rounded-xl hover:bg-red-100 cursor-pointer font-bold transition-colors text-center"

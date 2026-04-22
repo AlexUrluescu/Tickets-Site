@@ -364,7 +364,7 @@ const handleCreazaCont = async () => {
       }),
     });
     const token = "dummy-token";
-    const userData = { name: nume.value };
+    const userData = { name: nume.value, role: "user" };
 
     // Salvează email-ul în localStorage
     localStorage.setItem("userEmail", emailFromLogin);

@@ -6,6 +6,8 @@ import PaginaSignUp from "@/components/PaginaSignUp.vue";
 import PaginaPlata from "@/components/PaginaPlata.vue";
 import ConfirmarePlata from "@/components/ConfirmarePlata.vue";
 import PaginaIncarcareDocs from "@/components/PaginaIncarcareDocs.vue";
+import PaginaAdmin from "@/components/PaginaAdmin.vue";
+import { useUserStore } from "@/stores/user.js";
 
 const routes = [
   {
@@ -43,11 +45,30 @@ const routes = [
     name: "ConfirmarePlata",
     component: ConfirmarePlata,
   },
+  {
+    path: "/admin",
+    name: "PaginaAdmin",
+    component: PaginaAdmin,
+    meta: { requiresAdmin: true },
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAdmin) {
+    const userStore = useUserStore();
+    if (!userStore.isLoggedIn || !userStore.isAdmin) {
+      next({ name: "PaginaPrincipala" });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
 });
 
 export default router;
