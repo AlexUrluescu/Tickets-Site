@@ -545,7 +545,7 @@ const handleBackButton = () => {
             </div>
           </div>
 
-          <div class="space-y-2">
+          <div style="margin-top: 20px; margin-bottom: 20px" class="space-y-2">
             <label
               for="password"
               class="block text-xs font-bold text-slate-500 uppercase ml-1"

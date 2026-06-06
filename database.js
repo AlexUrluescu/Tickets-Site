@@ -30,6 +30,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   connectionLimit: 10,
+  dateStrings: true,
 });
 
 const transporter = nodemailer.createTransport({
@@ -296,7 +297,7 @@ app.get("/api/match-date", (req, res) => {
       } else {
         const matchDate = results[0]?.data;
         const formattedDate = matchDate
-          ? matchDate.toISOString().split("T")[0]
+          ? (typeof matchDate === 'string' ? matchDate.split(' ')[0] : matchDate.toISOString().split("T")[0])
           : "Data nu a fost găsită";
         res.json({ matchDate: formattedDate });
       }
@@ -367,7 +368,7 @@ app.get("/api/all-matches", (req, res) => {
 
       const formattedMatches = restMatches.map((match) => ({
         id: match.id,
-        matchDate: new Date(match.data).toISOString().split("T")[0],
+        matchDate: typeof match.data === 'string' ? match.data.split(' ')[0] : new Date(match.data).toISOString().split("T")[0],
         matchTime: match.ora,
         awayTeamName: match.awayTeamName,
         awayTeamLogo: match.awayTeamLogo,
@@ -711,6 +712,96 @@ app.post("/api/populate-bilete", (req, res) => {
     });
   });
 });
+
+// ========== FUNCȚIE REUTILIZABILĂ: Generare bilete pentru un meci ==========
+function generateBileteForMatch(matchId) {
+  return new Promise((resolve, reject) => {
+    const zone = [
+      // TRIBUNA 1
+      { zona: "TRIBUNA 1", sector: "A1", randuri: [1, 6], locuriPerRand: 69, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A1", randuri: [7, 11], locuriPerRand: 63, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A1", randuri: [12, 17], locuriPerRand: 12, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A2", randuri: [1, 4], locuriPerRand: 52, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A2", randuri: [5, 6], locuriPerRand: 64, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A2", randuri: [7, 11], locuriPerRand: 54, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A3", randuri: [1, 6], locuriPerRand: 69, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A3", randuri: [7, 11], locuriPerRand: 58, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "A3", randuri: [12, 17], locuriPerRand: 12, pret: 50.0 },
+      { zona: "TRIBUNA 1", sector: "VIP", randuri: [1, 6], locuriPerRand: 66, pret: 100.0 },
+      // TRIBUNA 2
+      { zona: "TRIBUNA 2", sector: "C1", randuri: [1, 10], locuriPerRand: 54, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C1", randuri: [11, 13], locuriPerRand: 44, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C1", randuri: [14, 24], locuriPerRand: 53, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C2", randuri: [1, 10], locuriPerRand: 54, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C2", randuri: [11, 13], locuriPerRand: 44, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C2", randuri: [14, 24], locuriPerRand: 53, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C3", randuri: [1, 10], locuriPerRand: 54, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C3", randuri: [11, 13], locuriPerRand: 44, pret: 50.0 },
+      { zona: "TRIBUNA 2", sector: "C3", randuri: [14, 24], locuriPerRand: 53, pret: 50.0 },
+      // PELUZA NORD
+      ...["D1", "D2", "D3", "D4", "D5"].flatMap((sector) => [
+        { zona: "PELUZA NORD", sector, randuri: [7, 8], locuriPerRand: 41, pret: 30.0 },
+        { zona: "PELUZA NORD", sector, randuri: [9, 9], locuriPerRand: 42, pret: 30.0 },
+        { zona: "PELUZA NORD", sector, randuri: [10, 10], locuriPerRand: 45, pret: 30.0 },
+        { zona: "PELUZA NORD", sector, randuri: [11, 13], locuriPerRand: 52, pret: 30.0 },
+        { zona: "PELUZA NORD", sector, randuri: [14, 19], locuriPerRand: 56, pret: 30.0 },
+      ]),
+      // PELUZA SUD
+      ...["B1", "B2", "B3"].flatMap((sector) => [
+        { zona: "PELUZA SUD", sector, randuri: [7, 8], locuriPerRand: 41, pret: 30.0 },
+        { zona: "PELUZA SUD", sector, randuri: [9, 9], locuriPerRand: 42, pret: 30.0 },
+        { zona: "PELUZA SUD", sector, randuri: [10, 10], locuriPerRand: 45, pret: 30.0 },
+        { zona: "PELUZA SUD", sector, randuri: [11, 13], locuriPerRand: 52, pret: 30.0 },
+        { zona: "PELUZA SUD", sector, randuri: [14, 19], locuriPerRand: 56, pret: 30.0 },
+      ]),
+    ];
+
+    // Șterge biletele existente DOAR pentru acest meci
+    pool.query("DELETE FROM bilete WHERE match_id = ?", [matchId], (err) => {
+      if (err) {
+        console.error("[GenerateBilete] Eroare la ștergere:", err);
+        return reject(err);
+      }
+
+      const bilete = [];
+      for (const z of zone) {
+        for (let rand = z.randuri[0]; rand <= z.randuri[1]; rand++) {
+          for (let loc = 1; loc <= z.locuriPerRand; loc++) {
+            bilete.push([z.zona, z.sector, rand, loc, "disponibil", z.pret, matchId]);
+          }
+        }
+      }
+
+      pool.query(
+        `INSERT INTO bilete (zona, sector, rand, loc, status, pret, match_id) VALUES ?`,
+        [bilete],
+        (err, result) => {
+          if (err) {
+            console.error("[GenerateBilete] Eroare la inserare:", err);
+            return reject(err);
+          }
+          console.log(`[GenerateBilete] ✅ ${result.affectedRows} bilete generate pentru meciul ${matchId}`);
+          resolve(result.affectedRows);
+        }
+      );
+    });
+  });
+}
+
+// Endpoint API pentru generare bilete (folosit din UI Admin)
+app.post("/api/populate-bilete-match", async (req, res) => {
+  const { matchId } = req.body;
+  if (!matchId) {
+    return res.status(400).json({ error: "matchId este obligatoriu" });
+  }
+  try {
+    const inserate = await generateBileteForMatch(Number(matchId));
+    res.status(200).json({ message: "Biletele au fost generate cu succes", inserate, matchId });
+  } catch (err) {
+    res.status(500).json({ error: "Eroare la generare bilete" });
+  }
+});
+
 app.get("/api/dev/populeaza", (req, res) => {
   fetch("http://localhost:3000/api/populate-bilete", {
     method: "POST",
@@ -1340,7 +1431,7 @@ app.get("/api/admin/matches", checkAdmin, (req, res) => {
       }
       const formattedMatches = results.map((match) => ({
         id: match.id,
-        matchDate: new Date(match.data).toISOString().split("T")[0],
+        matchDate: typeof match.data === 'string' ? match.data.split(' ')[0] : new Date(match.data).toISOString().split("T")[0],
         matchTime: match.ora,
         awayTeamName: match.awayTeamName,
         awayTeamLogo: match.awayTeamLogo,
@@ -1351,7 +1442,7 @@ app.get("/api/admin/matches", checkAdmin, (req, res) => {
 });
 
 // Admin - Adaugă meci
-app.post("/api/admin/add-match", checkAdmin, (req, res) => {
+app.post("/api/admin/add-match", checkAdmin, async (req, res) => {
   const { data, ora, echipa_deplasare_id } = req.body;
   if (!data || !ora || !echipa_deplasare_id) {
     return res.status(400).json({ error: "Toate câmpurile sunt obligatorii (data, ora, echipa_deplasare_id)" });
@@ -1359,23 +1450,21 @@ app.post("/api/admin/add-match", checkAdmin, (req, res) => {
   pool.query(
     "INSERT INTO meciuri (data, ora, echipa_deplasare_id) VALUES (?, ?, ?)",
     [data, ora, echipa_deplasare_id],
-    (err, result) => {
+    async (err, result) => {
       if (err) {
         console.error("Eroare la adăugarea meciului:", err);
         return res.status(500).json({ error: "Eroare server" });
       }
-      // Populare automată bilete pentru noul meci
-      const matchId = result.insertId;
-      fetch(`http://localhost:${PORT}/api/populate-bilete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      })
-        .then(() => {
-          res.status(201).json({ message: "Meci adăugat și bilete populate cu succes", id: matchId });
-        })
-        .catch(() => {
-          res.status(201).json({ message: "Meci adăugat dar eroare la popularea biletelor", id: matchId });
-        });
+      const matchId = Number(result.insertId);
+      console.log(`[Admin] Meci adăugat cu ID: ${matchId}. Se generează biletele...`);
+      try {
+        const inserate = await generateBileteForMatch(matchId);
+        console.log(`[Admin] ✅ Bilete generate automat: ${inserate}`);
+        res.status(201).json({ message: "Meci adăugat și bilete generate cu succes", id: matchId });
+      } catch (genErr) {
+        console.error("[Admin] ❌ Eroare la generare automată bilete:", genErr);
+        res.status(201).json({ message: "Meci adăugat dar eroare la generarea biletelor", id: matchId });
+      }
     }
   );
 });
