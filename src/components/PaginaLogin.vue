@@ -489,31 +489,7 @@ const handleBackButton = () => {
             Continuă
           </button>
 
-          <div class="relative py-4">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-slate-200"></div>
-            </div>
-            <div class="relative flex justify-center text-xs uppercase">
-              <span class="px-2 bg-white text-slate-400"
-                >Sau conectează-te cu</span
-              >
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-600"
-            >
-              <span class="text-blue-600">f</span> Facebook
-            </button>
-            <button
-              class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-600"
-            >
-              <span class="text-red-500">G</span> Google
-            </button>
-          </div>
-
-          <p class="text-center text-xs text-slate-400 mt-4">
+          <p style="margin-top: 20px;"   class="text-center text-xs text-slate-400 mt-4">
             Contul se va crea automat dacă nu există.
           </p>
         </div>

@@ -153,7 +153,7 @@ const useSuggestion = (suggestion) => {
             <span
               class="w-2 h-2 bg-green-400 rounded-full animate-pulse"
             ></span>
-            Powered by Gemini AI
+            Powered by Llama
           </p>
         </div>
         <div style="display: flex; justify-content: end">

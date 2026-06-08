@@ -1327,6 +1327,36 @@ const checkAdmin = (req, res, next) => {
   );
 };
 
+// Utilizator - Vizualizare bilete
+app.get("/api/user/bilete", (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ error: "Email lipsă" });
+  }
+
+  const query = `
+    SELECT 
+      pt.ticket_id, pt.match_id, pt.sector, pt.tribuna, pt.rand, pt.locuri, pt.pret, pt.invitation_code,
+      o.order_id, o.user_email, o.status,
+      m.data AS match_date, m.ora AS match_time,
+      e.nume AS echipa_oaspete, e.logo_url AS echipa_oaspete_logo
+    FROM purchased_tickets pt
+    JOIN orders o ON pt.order_id = o.order_id
+    JOIN meciuri m ON pt.match_id = m.id
+    JOIN echipe e ON m.echipa_deplasare_id = e.id
+    WHERE o.user_email = ? AND o.status = 'completed'
+    ORDER BY m.data DESC, m.ora DESC
+  `;
+
+  pool.query(query, [email], (err, results) => {
+    if (err) {
+      console.error("Eroare la preluarea biletelor:", err);
+      return res.status(500).json({ error: "Eroare la preluarea biletelor" });
+    }
+    res.json(results);
+  });
+});
+
 // Admin - Statistici generale
 app.get("/api/admin/stats", checkAdmin, (req, res) => {
   const queries = {

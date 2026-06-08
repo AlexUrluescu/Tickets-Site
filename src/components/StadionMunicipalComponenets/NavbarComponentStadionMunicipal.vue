@@ -272,6 +272,10 @@ const goToAdmin = () => {
   router.push("/admin");
 };
 
+const goToBileteleMele = () => {
+  router.push("/biletele-mele");
+};
+
 const toggleShoppingCart = () => {
   shoppingCartStore.toggleShoppingCart();
 };
@@ -470,6 +474,18 @@ const hideLoginInfo = () => {
               Admin Dashboard
             </p>
             <div v-if="isAdmin" class="h-px bg-gray-100 my-1 mx-2"></div>
+            
+            <p
+              @click="goToBileteleMele"
+              class="flex items-center gap-2 px-4 py-3 text-slate-700 rounded-xl hover:bg-blue-50 hover:text-blue-700 cursor-pointer font-bold transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z" />
+              </svg>
+              Biletele Mele
+            </p>
+            <div class="h-px bg-gray-100 my-1 mx-2"></div>
+
             <p
               @click="logout"
               class="flex items-center justify-center gap-2 px-4 py-3 text-red-600 bg-red-50 rounded-xl hover:bg-red-100 cursor-pointer font-bold transition-colors text-center"

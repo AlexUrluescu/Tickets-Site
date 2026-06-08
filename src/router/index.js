@@ -7,6 +7,7 @@ import PaginaPlata from "@/components/PaginaPlata.vue";
 import ConfirmarePlata from "@/components/ConfirmarePlata.vue";
 import PaginaIncarcareDocs from "@/components/PaginaIncarcareDocs.vue";
 import PaginaAdmin from "@/components/PaginaAdmin.vue";
+import BileteleMele from "@/components/BileteleMele.vue";
 import { useUserStore } from "@/stores/user.js";
 
 const routes = [
@@ -44,6 +45,11 @@ const routes = [
     path: "/confirm-path",
     name: "ConfirmarePlata",
     component: ConfirmarePlata,
+  },
+  {
+    path: "/biletele-mele",
+    name: "BileteleMele",
+    component: BileteleMele,
   },
   {
     path: "/admin",
