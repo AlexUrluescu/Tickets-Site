@@ -1499,6 +1499,32 @@ app.post("/api/admin/add-match", checkAdmin, async (req, res) => {
   );
 });
 
+// Admin - Editează meci existent
+app.put("/api/admin/edit-match", checkAdmin, (req, res) => {
+  const { id, data, ora, echipa_deplasare_id } = req.body;
+  if (!id) {
+    return res.status(400).json({ error: "ID-ul meciului este obligatoriu" });
+  }
+  if (!data || !ora || !echipa_deplasare_id) {
+    return res.status(400).json({ error: "Toate câmpurile sunt obligatorii (data, ora, echipa_deplasare_id)" });
+  }
+  pool.query(
+    "UPDATE meciuri SET data = ?, ora = ?, echipa_deplasare_id = ? WHERE id = ?",
+    [data, ora, echipa_deplasare_id, id],
+    (err, result) => {
+      if (err) {
+        console.error("Eroare la editarea meciului:", err);
+        return res.status(500).json({ error: "Eroare server" });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Meciul nu a fost găsit" });
+      }
+      console.log(`[Admin] ✅ Meci ${id} actualizat cu succes`);
+      res.json({ message: "Meci actualizat cu succes", id });
+    }
+  );
+});
+
 
 function dbQuery(sql, params = []) {
   return new Promise((resolve, reject) => {

@@ -20,6 +20,10 @@ const newMatch = ref({ data: "", ora: "", echipa_deplasare_id: "" });
 const newTeam = ref({ nume: "", logo_url: "" });
 const message = ref({ text: "", type: "" });
 
+// Edit match state
+const editingMatch = ref(null);
+const editForm = ref({ data: "", ora: "", echipa_deplasare_id: "" });
+
 // Fetch helpers
 const apiBase = "http://localhost:3000/api/admin";
 
@@ -114,6 +118,49 @@ const addTeam = async () => {
   loading.value = false;
 };
 
+const startEditMatch = (match) => {
+  editingMatch.value = match;
+  editForm.value = {
+    data: match.matchDate,
+    ora: match.matchTime,
+    echipa_deplasare_id: teams.value.find(t => t.nume === match.awayTeamName)?.id || "",
+  };
+};
+
+const cancelEdit = () => {
+  editingMatch.value = null;
+  editForm.value = { data: "", ora: "", echipa_deplasare_id: "" };
+};
+
+const saveMatch = async () => {
+  if (!editForm.value.data || !editForm.value.ora || !editForm.value.echipa_deplasare_id) {
+    showMessage("Completează toate câmpurile!", "error");
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await fetch(`${apiBase}/edit-match`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editingMatch.value.id,
+        ...editForm.value,
+        email: userEmail,
+      }),
+    });
+    if (res.ok) {
+      showMessage("Meci actualizat cu succes!");
+      cancelEdit();
+      await fetchMatches();
+      await fetchStats();
+    } else {
+      const err = await res.json();
+      showMessage(err.error || "Eroare la actualizare", "error");
+    }
+  } catch (e) { showMessage("Eroare de rețea", "error"); }
+  loading.value = false;
+};
+
 const goBack = () => {
   router.push("/bilete-stadion-municipal");
 };
@@ -131,6 +178,22 @@ const formatDate = (dateStr) => {
 
 const formatCurrency = (val) => {
   return Number(val || 0).toLocaleString("ro-RO", { minimumFractionDigits: 2 }) + " RON";
+};
+
+const formatSeats = (randData, locuriData) => {
+  try {
+    let parsed = randData;
+    if (typeof randData === "string") {
+      parsed = JSON.parse(randData);
+    }
+    if (Array.isArray(parsed)) {
+      return parsed.map(item => `Rând ${item.rand}, Loc ${item.locuri}`).join(" | ");
+    }
+  } catch (e) {
+    // not JSON, fall through
+  }
+  // Fallback for simple values
+  return `Rând ${randData || '-'}, Loc ${locuriData || '-'}`;
 };
 
 onMounted(async () => {
@@ -284,7 +347,7 @@ const tabs = [
                   <p class="text-xs text-slate-400">{{ formatDate(ticket.matchDate) }}</p>
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-300 font-medium">{{ ticket.sector }}</td>
-                <td class="px-6 py-4 text-sm text-slate-300">R{{ ticket.rand }} / L{{ ticket.locuri }}</td>
+                <td class="px-6 py-4 text-sm text-slate-300">{{ formatSeats(ticket.rand, ticket.locuri) }}</td>
                 <td class="px-6 py-4">
                   <span class="bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-lg text-xs font-bold">{{ ticket.numar_bilete }}</span>
                 </td>
@@ -302,7 +365,7 @@ const tabs = [
           <h2 style="margin-bottom: 10px;"  class="text-lg font-bold text-white mb-6">Adaugă Meci Nou</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div style="margin-bottom: 10px;">
-              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Data meciului</label>
+              <label style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Data meciului</label>
               <input
                 type="date"
                 v-model="newMatch.data"
@@ -310,7 +373,7 @@ const tabs = [
               />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Ora</label>
+              <label  style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Ora</label>
               <input
                 type="time"
                 v-model="newMatch.ora"
@@ -318,7 +381,7 @@ const tabs = [
               />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Echipa Deplasare</label>
+              <label style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Echipa Deplasare</label>
               <select
                 v-model="newMatch.echipa_deplasare_id"
                 class="w-full px-4 py-3 bg-slate-700/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
@@ -370,6 +433,15 @@ const tabs = [
                 <p class="text-white font-bold">Universitatea Craiova vs {{ match.awayTeamName }}</p>
                 <p class="text-slate-400 text-sm">{{ formatDate(match.matchDate) }} • {{ match.matchTime }}</p>
               </div>
+              <button
+                @click="startEditMatch(match)"
+                class="px-4 py-2 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+                Editează
+              </button>
               <span class="bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold">
                 ID: {{ match.id }}
               </span>
@@ -447,6 +519,77 @@ const tabs = [
           </div>
         </div>
       </div>
+
+      <!-- MODAL: Editare Meci -->
+      <div v-if="editingMatch" class="edit-modal-overlay" @click.self="cancelEdit">
+        <div class="edit-modal-content">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <div class="bg-amber-500/20 p-2.5 rounded-xl">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-amber-400">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">Editare Meci</h3>
+                
+              </div>
+            </div>
+            <button @click="cancelEdit" class="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div style="margin-top: 20px; margin-bottom: 10px;">
+              <label style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Data meciului</label>
+              <input
+                type="date"
+                v-model="editForm.data"
+                class="w-full px-4 py-3 bg-slate-700/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              />
+            </div>
+            <div style="margin-top: 20px; margin-bottom: 10px;">
+              <label style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Ora</label>
+              <input
+                type="time"
+                v-model="editForm.ora"
+                class="w-full px-4 py-3 bg-slate-700/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              />
+            </div>
+            <div style="margin-top: 20px; margin-bottom: 10px;">
+              <label style="margin-bottom: 5px" class="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Echipa Deplasare</label>
+              <select
+                v-model="editForm.echipa_deplasare_id"
+                class="w-full px-4 py-3 bg-slate-700/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all"
+              >
+                <option value="" disabled class="bg-slate-800">Selectează echipa</option>
+                <option v-for="team in teams" :key="team.id" :value="team.id" class="bg-slate-800">
+                  {{ team.nume }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; margin-bottom: 10px;" class="flex gap-3 mt-6">
+            <button
+              @click="cancelEdit"
+              class="flex-1 px-6 py-3 bg-slate-700/50 hover:bg-slate-700 text-slate-300 font-bold text-sm uppercase tracking-wider rounded-xl transition-all"
+            >
+              Anulează
+            </button>
+            <button
+              @click="saveMatch"
+              :disabled="loading"
+              class="flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm uppercase tracking-wider rounded-xl shadow-lg shadow-amber-600/30 transition-all transform active:scale-95 disabled:opacity-50"
+            >
+              {{ loading ? 'Se salvează...' : '✓ Salvează' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -465,5 +608,47 @@ const tabs = [
 
 .animate-slide-in {
   animation: slideIn 0.3s ease-out;
+}
+
+/* Edit Modal */
+.edit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.edit-modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  width: 100%;
+  max-width: 480px;
+  margin: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>
