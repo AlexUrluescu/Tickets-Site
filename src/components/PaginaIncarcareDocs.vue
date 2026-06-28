@@ -68,7 +68,7 @@ const isDragging = ref(false);
 const isUploading = ref(false);
 const status = reactive({ message: "", type: "" });
 
-// 1. Handle File Selection via Click
+
 const triggerFileInput = () => {
   fileInput.value.click();
 };
@@ -78,20 +78,19 @@ const handleFileChange = (event) => {
   validateAndSetFile(file);
 };
 
-// 2. Handle Drag and Drop
+
 const handleDrop = (event) => {
   isDragging.value = false;
   const file = event.dataTransfer.files[0];
   validateAndSetFile(file);
 };
 
-// Helper: Validate file type
+
 const validateAndSetFile = (file) => {
-  status.message = ""; // Reset status
+  status.message = ""; 
   if (!file) return;
 
-  // Check extension specifically
-  // Microsoft Word MIME type or just checking the name extension
+
   if (
     !file.name.endsWith(".docx") &&
     file.type !==
@@ -107,11 +106,11 @@ const validateAndSetFile = (file) => {
 
 const clearFile = () => {
   selectedFile.value = null;
-  if (fileInput.value) fileInput.value.value = ""; // Reset input value so same file can be selected again
+  if (fileInput.value) fileInput.value.value = ""; 
   status.message = "";
 };
 
-// 3. Upload Logic
+
 const uploadFile = async () => {
   if (!selectedFile.value) return;
 
@@ -123,8 +122,7 @@ const uploadFile = async () => {
   formData.append("file", selectedFile.value);
 
   try {
-    // START REQUEST
-    // Note: Ensure your Express server port matches (e.g., 3000)
+   
     const response = await fetch("http://localhost:3000/upload-doc", {
       method: "POST",
       body: formData,
@@ -139,8 +137,7 @@ const uploadFile = async () => {
     status.message = `Success! Document processed into ${data.chunks} embedding chunks.`;
     status.type = "success";
 
-    // Optional: Auto-clear file on success
-    // clearFile();
+
   } catch (error) {
     console.error(error);
     status.message = error.message || "Server error occurred.";
@@ -152,7 +149,7 @@ const uploadFile = async () => {
 </script>
 
 <style scoped>
-/* Container Layout */
+
 .uploader-container {
   display: flex;
   justify-content: center;
@@ -162,7 +159,7 @@ const uploadFile = async () => {
   background-color: #f4f6f8;
 }
 
-/* Card Styling */
+
 .card {
   width: 100%;
   max-width: 480px;
@@ -184,7 +181,7 @@ h2 {
   font-size: 0.95rem;
 }
 
-/* Drop Zone */
+
 .drop-zone {
   border: 2px dashed #cbd5e0;
   border-radius: 12px;
@@ -199,7 +196,7 @@ h2 {
 
 .drop-zone:hover,
 .drop-zone.is-dragging {
-  border-color: #42b983; /* Vue Green */
+  border-color: #42b983;
   background: #f0fdf4;
 }
 
@@ -217,7 +214,7 @@ h2 {
   display: none;
 }
 
-/* File Info Display */
+
 .file-info {
   display: flex;
   align-items: center;
@@ -244,11 +241,11 @@ h2 {
   padding: 0 5px;
 }
 
-/* Upload Button */
+
 .upload-btn {
   width: 100%;
   padding: 14px;
-  background-color: #34495e; /* Dark Blue */
+  background-color: #34495e; 
   color: white;
   border: none;
   border-radius: 8px;

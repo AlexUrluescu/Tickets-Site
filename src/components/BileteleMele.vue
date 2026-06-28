@@ -50,7 +50,7 @@ const formatRand = (randString) => {
       return [...new Set(rows)].join(', ');
     }
   } catch(e) {
-    // Dacă nu este JSON valid, îl returnăm ca atare
+
     return randString;
   }
   return randString;
@@ -86,12 +86,12 @@ const formatRand = (randString) => {
         <div v-for="bilet in bilete" :key="bilet.ticket_id" 
              class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden flex flex-col hover:shadow-lg transition-shadow relative">
              
-          <!-- Cod Bilet watermark -->
+ 
           <div class="absolute -right-6 -bottom-6 text-gray-100 font-black text-6xl transform rotate-[-15deg] select-none pointer-events-none z-0">
             #{{ bilet.ticket_id }}
           </div>
 
-          <!-- Header Bilet -->
+   
           <div class="bg-gradient-to-r from-blue-800 to-blue-600 p-4 text-white flex justify-between items-center relative z-10">
             <div class="flex items-center gap-3">
               <img src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg" alt="U Craiova" class="h-8 object-contain drop-shadow-md bg-white rounded-full p-1" />
@@ -105,7 +105,7 @@ const formatRand = (randString) => {
             </div>
           </div>
 
-          <!-- Body Bilet -->
+
           <div class="p-5 flex-grow flex justify-between relative z-10">
             <div class="space-y-4 w-2/3">
               <div>
@@ -124,7 +124,6 @@ const formatRand = (randString) => {
               </div>
             </div>
 
-            <!-- Partea dreapta cu QR si Pret -->
             <div class="w-1/3 flex flex-col items-end justify-between border-l border-dashed border-gray-300 pl-4">
               <div class="text-right">
                 <p class="text-xs text-gray-400 uppercase font-bold">Preț</p>
@@ -155,5 +154,5 @@ const formatRand = (randString) => {
 </template>
 
 <style scoped>
-/* Orice stiluri adiționale pot fi adăugate aici */
+
 </style>

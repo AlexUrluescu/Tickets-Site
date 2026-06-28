@@ -18,21 +18,18 @@ const cardName = ref("");
 const isProcessing = ref(false);
 const errorMessage = ref("");
 
-// Verificare dacă există items în coș la încărcarea paginii
+
 onMounted(() => {
   if (items.value.length === 0) {
     router.push("/bilete-stadion-municipal");
   }
 
-  // Preia email-ul din localStorage sau din user store
   const userEmail = localStorage.getItem("userEmail") || "";
   if (!userEmail) {
-    // Redirecționează la login dacă nu există email
     router.push("/user/login");
   }
 });
 
-// Formatam numarul cardului cu spatii dupa fiecare 4 numere
 const formatCardNumber = (event) => {
   let value = event.target.value.replace(/\D/g, "");
   let formattedValue = "";
@@ -45,7 +42,7 @@ const formatCardNumber = (event) => {
   displayValueCN.value = formattedValue;
 };
 
-// Formatam data expirarii ca sa apara '/' dupa ce introduci luna
+
 const formatExpirationDate = (event) => {
   let value = event.target.value.replace(/\D/g, "");
   let formattedValue = "";
@@ -63,7 +60,7 @@ const formatCVC = (event) => {
   displayValueCVC.value = value;
 };
 
-// Validare date card
+
 const validateCardData = () => {
   if (!cardName.value || cardName.value.length < 3) {
     errorMessage.value = "Vă rugăm introduceți numele de pe card";
@@ -91,7 +88,7 @@ const validateCardData = () => {
   return true;
 };
 
-// Procesare plată
+
 const processPayment = async () => {
   if (!validateCardData()) {
     return;
@@ -101,7 +98,6 @@ const processPayment = async () => {
   errorMessage.value = "";
 
   try {
-    // Preia datele necesare
     const userEmail = localStorage.getItem("userEmail");
     const matchData = JSON.parse(localStorage.getItem("selectedMatch") || "{}");
 
@@ -109,7 +105,7 @@ const processPayment = async () => {
     console.log("matchData din localStorage:", matchData);
     console.log("matchId din matchData:", matchData.matchId);
 
-    // Verifică că matchId există
+    
     if (!matchData.matchId) {
       errorMessage.value =
         "Eroare: ID-ul meciului lipsește. Vă rugăm să reveniți la selecția biletelor.";
@@ -545,7 +541,6 @@ const goBack = () => {
   font-family: "Noto Sans", sans-serif;
 }
 
-/* Custom Scrollbar for the items list */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }

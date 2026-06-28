@@ -10,9 +10,8 @@ import crypto from 'crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configurare Nodemailer
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // sau alt serviciu SMTP
+    service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER || 'your-email@gmail.com',
         pass: process.env.EMAIL_PASS || 'your-app-password'
@@ -24,12 +23,9 @@ function generateTicketCode() {
     return 'TKT' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
 
-// Funcție pentru generare număr invitație
 function generateInvitationNumber() {
     return 'POHR' + Math.floor(Math.random() * 90000 + 10000);
 }
-
-// Funcție pentru creare PDF bilet
 async function createTicketPDF(ticketData) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -42,27 +38,22 @@ async function createTicketPDF(ticketData) {
             doc.on('data', chunk => chunks.push(chunk));
             doc.on('end', () => resolve(Buffer.concat(chunks)));
 
-            // Header cu logo-uri
+
             doc.rect(0, 0, doc.page.width, 80).fill('#f0f0f0');
 
-            // Titlu principal
             doc.fillColor('#000000')
                 .fontSize(20)
                 .text('eBilet - Superliga - FC Hermannstadt vs ' + ticketData.awayTeam, 50, 25, {
                     align: 'center'
                 });
 
-            // Informații meci
             doc.fontSize(12)
                 .text(`Data: ${ticketData.matchDate}, Ora: ${ticketData.matchTime}`, 50, 55)
                 .text('Stadion Municipal, Sibiu', 50, 70);
-
-            // Separator
             doc.moveTo(50, 100)
                 .lineTo(550, 100)
                 .stroke();
 
-            // QR Code pentru bilet
             const qrCodeData = {
                 ticketId: ticketData.ticketId,
                 sector: ticketData.sector,
@@ -74,7 +65,6 @@ async function createTicketPDF(ticketData) {
             const qrBuffer = Buffer.from(qrCodeImage.split(',')[1], 'base64');
             doc.image(qrBuffer, 50, 120, { width: 100 });
 
-            // Informații bilet
             doc.fontSize(14)
                 .text('DETALII BILET', 200, 120, { underline: true });
 
@@ -86,19 +76,15 @@ async function createTicketPDF(ticketData) {
                 .text(`Număr bilete: ${ticketData.numberOfTickets}`, 200, 230)
                 .text(`Preț total: ${ticketData.totalPrice} RON`, 200, 250);
 
-            // Cod invitație
             doc.fontSize(14)
                 .text('INVITAȚIE', 400, 120, { underline: true });
 
             doc.fontSize(16)
                 .text(ticketData.invitationCode, 400, 150);
 
-            // Separator
             doc.moveTo(50, 280)
                 .lineTo(550, 280)
                 .stroke();
-
-            // Informații deținător
             doc.fontSize(14)
                 .text('DEȚINĂTOR', 50, 300, { underline: true });
 
@@ -107,7 +93,6 @@ async function createTicketPDF(ticketData) {
                 .text(`Email: ${ticketData.userEmail}`, 50, 350)
                 .text(`Domiciliu: Sibiu`, 50, 370);
 
-            // Instrucțiuni și informații importante
             doc.fontSize(14)
                 .text('INFORMAȚII IMPORTANTE', 50, 410, { underline: true });
 
@@ -135,14 +120,13 @@ async function createTicketPDF(ticketData) {
                 yPos += 15;
             });
 
-            // Footer
             doc.fontSize(10)
                 .fillColor('#666666')
                 .text(`Organizator: FC Hermannstadt, RO34826156`, 50, 700)
                 .text(`Contact Bilete.ro: +4072 776 66 31`, 50, 715)
                 .text(`© 2025 www.bilete.ro`, 50, 730, { align: 'center' });
 
-            // Cod de bare pentru scanare rapidă
+   
             doc.rect(350, 650, 200, 60).stroke();
             doc.fontSize(8)
                 .fillColor('#000000')
@@ -156,7 +140,6 @@ async function createTicketPDF(ticketData) {
 }
 
 
-// Endpoint pentru procesare plată și generare bilete
 app.post('/api/process-payment', async (req, res) => {
     try {
         const {
@@ -170,16 +153,15 @@ app.post('/api/process-payment', async (req, res) => {
             totalAmount
         } = req.body;
 
-        // Validare date card (în producție, folosește un serviciu de plăți real)
+    
         if (!cardName || !cardNumber || !expirationDate || !cvc) {
             return res.status(400).json({ error: 'Date card incomplete' });
         }
 
-        // Simulare procesare plată
+        
         const paymentId = 'PAY-' + crypto.randomBytes(8).toString('hex').toUpperCase();
         const orderId = 'ORD-' + crypto.randomBytes(6).toString('hex').toUpperCase();
 
-        // Salvare comandă în baza de date
         pool.query(
             `INSERT INTO orders (order_id, user_email, user_name, total_amount, payment_id, status) 
              VALUES (?, ?, ?, ?, ?, 'completed')`,
@@ -190,14 +172,13 @@ app.post('/api/process-payment', async (req, res) => {
                     return res.status(500).json({ error: 'Eroare procesare comandă' });
                 }
 
-                // Generare bilete PDF pentru fiecare item
+        
                 const tickets = [];
 
                 for (const item of items) {
                     const ticketId = generateTicketCode();
                     const invitationCode = generateInvitationNumber();
 
-                    // Salvare bilet în baza de date
                     await new Promise((resolve, reject) => {
                         pool.query(
                             `INSERT INTO purchased_tickets 
@@ -223,7 +204,6 @@ app.post('/api/process-payment', async (req, res) => {
                         );
                     });
 
-                    // Actualizare status locuri în baza de date
                     if (item.selectedSeatsKeys) {
                         for (const seatKey of item.selectedSeatsKeys) {
                             const [rand, loc] = seatKey.split('-');
@@ -242,7 +222,6 @@ app.post('/api/process-payment', async (req, res) => {
                         }
                     }
 
-                    // Generare PDF pentru bilet
                     const ticketData = {
                         ticketId,
                         invitationCode,
@@ -270,7 +249,7 @@ app.post('/api/process-payment', async (req, res) => {
                     });
                 }
 
-                // Trimitere email cu biletele atașate
+               
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
                     to: userEmail,
@@ -310,7 +289,8 @@ app.post('/api/process-payment', async (req, res) => {
                     }
                 });
 
-                // Răspuns succes
+        
+                
                 res.json({
                     success: true,
                     orderId,
@@ -325,12 +305,11 @@ app.post('/api/process-payment', async (req, res) => {
     }
 });
 
-// Endpoint pentru descărcare bilet
 app.get('/api/download-ticket/:ticketId', async (req, res) => {
     const { ticketId } = req.params;
 
     try {
-        // Verificare și preluare date bilet din baza de date
+          
         pool.query(
             `SELECT pt.*, o.user_name, o.user_email 
              FROM purchased_tickets pt 
@@ -346,7 +325,7 @@ app.get('/api/download-ticket/:ticketId', async (req, res) => {
                 const ticketData = {
                     ticketId: ticket.ticket_id,
                     invitationCode: ticket.invitation_code,
-                    awayTeam: 'Echipa Oaspete', // Poți prelua din alt tabel
+                    awayTeam: 'Echipa Oaspete', 
                     matchDate: new Date().toLocaleDateString('ro-RO'),
                     matchTime: '17:30',
                     sector: ticket.sector,

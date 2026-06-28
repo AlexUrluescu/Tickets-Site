@@ -7,7 +7,6 @@ const newMessage = ref("");
 const messagesContainer = ref(null);
 const isTyping = ref(false);
 
-// Initial greeting
 const messages = ref([
   {
     id: 1,
@@ -20,7 +19,6 @@ const messages = ref([
   },
 ]);
 
-// Quick suggestion chips
 const suggestions = ref([
   "Când e următorul meci?",
   "Cât costă un bilet?",
@@ -69,7 +67,6 @@ const sendMessage = async (text = null) => {
 
   showSuggestions.value = false;
 
-  // 1. Add User Message
   messages.value.push({
     id: Date.now(),
     text: messageText,

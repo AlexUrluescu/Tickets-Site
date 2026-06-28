@@ -7,7 +7,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const userEmail = localStorage.getItem("userEmail");
 
-// State
+
 const activeTab = ref("stats");
 const loading = ref(false);
 const stats = ref({ totalBilete: 0, totalVenituri: 0, totalMeciuri: 0, totalUseri: 0 });
@@ -15,16 +15,16 @@ const soldTickets = ref([]);
 const teams = ref([]);
 const matches = ref([]);
 
-// Formulare
+
 const newMatch = ref({ data: "", ora: "", echipa_deplasare_id: "" });
 const newTeam = ref({ nume: "", logo_url: "" });
 const message = ref({ text: "", type: "" });
 
-// Edit match state
+
 const editingMatch = ref(null);
 const editForm = ref({ data: "", ora: "", echipa_deplasare_id: "" });
 
-// Fetch helpers
+
 const apiBase = "http://localhost:3000/api/admin";
 
 const showMessage = (text, type = "success") => {
@@ -190,9 +190,9 @@ const formatSeats = (randData, locuriData) => {
       return parsed.map(item => `Rând ${item.rand}, Loc ${item.locuri}`).join(" | ");
     }
   } catch (e) {
-    // not JSON, fall through
+
   }
-  // Fallback for simple values
+
   return `Rând ${randData || '-'}, Loc ${locuriData || '-'}`;
 };
 
@@ -210,7 +210,7 @@ const tabs = [
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 font-sans">
-    <!-- Header -->
+
     <header style="width: 100%;" class="bg-slate-900/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
       <div class="px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -235,7 +235,7 @@ const tabs = [
       </div>
     </header>
 
-    <!-- Message -->
+
     <div v-if="message.text" class="fixed top-20 right-6 z-50 animate-slide-in">
       <div :class="[
         'px-6 py-3 rounded-xl shadow-2xl font-bold text-sm flex items-center gap-2',
@@ -247,7 +247,7 @@ const tabs = [
     </div>
 
     <div class="px-6 py-8">
-      <!-- Tabs -->
+  
       <div class="flex gap-2 mb-8 bg-slate-800/50 p-1.5 rounded-2xl backdrop-blur-sm border border-white/5">
         <button
           v-for="tab in tabs"
@@ -265,7 +265,7 @@ const tabs = [
         </button>
       </div>
 
-      <!-- TAB: Statistici -->
+
       <div style="margin-top: 10px" v-if="activeTab === 'stats'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 shadow-xl shadow-blue-600/20 border border-blue-500/30">
           <div class="flex items-center justify-between mb-4">
@@ -304,7 +304,7 @@ const tabs = [
         </div>
       </div>
 
-      <!-- TAB: Bilete Vândute -->
+
       <div style="margin-top: 10px"  v-if="activeTab === 'tickets'" class="bg-slate-800/50 rounded-2xl border border-white/10 backdrop-blur-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-white/10">
           <h2 class="text-lg font-bold text-white">Bilete Vândute</h2>
@@ -358,9 +358,9 @@ const tabs = [
         </div>
       </div>
 
-      <!-- TAB: Meciuri -->
+    
       <div style="margin-top: 10px;"  v-if="activeTab === 'matches'" class="space-y-6">
-        <!-- Formular adăugare meci -->
+     
         <div class="bg-slate-800/50 rounded-2xl border border-white/10 backdrop-blur-sm p-6">
           <h2 style="margin-bottom: 10px;"  class="text-lg font-bold text-white mb-6">Adaugă Meci Nou</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -403,7 +403,7 @@ const tabs = [
           </button>
         </div>
 
-        <!-- Lista meciuri -->
+      
         <div class="bg-slate-800/50 rounded-2xl border border-white/10 backdrop-blur-sm overflow-hidden">
           <div class="px-6 py-5 border-b border-white/10">
             <h2 class="text-lg font-bold text-white">Meciuri Programate</h2>
@@ -450,9 +450,9 @@ const tabs = [
         </div>
       </div>
 
-      <!-- TAB: Echipe -->
+
       <div style="margin-top: 10px"  v-if="activeTab === 'teams'" class="space-y-6">
-        <!-- Formular adăugare echipă -->
+
         <div class="bg-slate-800/50 rounded-2xl border border-white/10 backdrop-blur-sm p-6">
           <h2 style="margin-bottom: 10px;" class="text-lg font-bold text-white mb-6">Adaugă Echipă Nouă</h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -485,7 +485,7 @@ const tabs = [
           </button>
         </div>
 
-        <!-- Lista echipe -->
+   
         <div style="margin-top: 10px;" class="bg-slate-800/50 rounded-2xl border border-white/10 backdrop-blur-sm overflow-hidden">
           <div class="px-6 py-5 border-b border-white/10">
             <h2 class="text-lg font-bold text-white">Echipe Disponibile</h2>
@@ -520,7 +520,7 @@ const tabs = [
         </div>
       </div>
 
-      <!-- MODAL: Editare Meci -->
+
       <div v-if="editingMatch" class="edit-modal-overlay" @click.self="cancelEdit">
         <div class="edit-modal-content">
           <div class="flex items-center justify-between mb-6">
@@ -610,7 +610,7 @@ const tabs = [
   animation: slideIn 0.3s ease-out;
 }
 
-/* Edit Modal */
+
 .edit-modal-overlay {
   position: fixed;
   inset: 0;

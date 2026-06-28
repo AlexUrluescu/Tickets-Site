@@ -1,4 +1,4 @@
-// database.js (ES Module)
+
 import mysql from "mysql2";
 import express from "express";
 import cors from "cors";
@@ -70,7 +70,7 @@ async function createTicketPDF(ticketData) {
       doc.on("data", (chunk) => chunks.push(chunk));
       doc.on("end", () => resolve(Buffer.concat(chunks)));
 
-      // Header
+   
       doc.rect(0, 0, doc.page.width, 80).fill("#f0f0f0");
 
       doc
@@ -95,10 +95,10 @@ async function createTicketPDF(ticketData) {
         )
         .text("Stadion Municipal, Sibiu", 50, 70);
 
-      // Separator
+     
       doc.moveTo(50, 100).lineTo(550, 100).stroke();
 
-      // QR Code
+      
       const qrCodeData = {
         ticketId: ticketData.ticketId,
         sector: ticketData.sector,
@@ -114,7 +114,7 @@ async function createTicketPDF(ticketData) {
         console.error("Eroare generare QR:", qrError);
       }
 
-      // Detalii bilet
+      
       doc.fontSize(14).text("DETALII BILET", 200, 120, { underline: true });
 
       doc
@@ -126,15 +126,15 @@ async function createTicketPDF(ticketData) {
         .text(`Numar bilete: ${ticketData.numberOfTickets}`, 200, 230)
         .text(`Pret total: ${ticketData.totalPrice} RON`, 200, 250);
 
-      // Cod invitație
+      
       doc.fontSize(14).text("INVITATIE", 400, 120, { underline: true });
 
       doc.fontSize(16).text(ticketData.invitationCode, 400, 150);
 
-      // Separator
+      
       doc.moveTo(50, 280).lineTo(550, 280).stroke();
 
-      // Deținător
+      
       doc.fontSize(14).text("DETINATOR", 50, 300, { underline: true });
 
       doc
@@ -142,7 +142,7 @@ async function createTicketPDF(ticketData) {
         .text(`Nume: ${ticketData.userName}`, 50, 330)
         .text(`Email: ${ticketData.userEmail}`, 50, 350);
 
-      // Informații importante
+      
       doc
         .fontSize(14)
         .text("INFORMATII IMPORTANTE", 50, 410, { underline: true });
@@ -187,7 +187,7 @@ async function createTicketPDF(ticketData) {
         yPos += 15;
       });
 
-      // Footer
+      
       doc
         .fontSize(10)
         .fillColor("#666666")
@@ -195,7 +195,7 @@ async function createTicketPDF(ticketData) {
         .text(`Contact ionoblemencoticketsservice.ro: +40755179942`, 50, 715)
         .text(`© 2025 www.ionoblemenco.ro`, 50, 730, { align: "center" });
 
-      // Cod bilet
+      
       doc.rect(350, 650, 200, 60).stroke();
       doc
         .fontSize(8)
@@ -363,7 +363,7 @@ app.get("/api/all-matches", (req, res) => {
           .json({ error: "Eroare la extragerea meciurilor din baza de date" });
       }
 
-      // Excludem primul meci (cel mai apropiat în timp)
+      
       const [, ...restMatches] = results;
 
       const formattedMatches = restMatches.map((match) => ({
@@ -449,7 +449,6 @@ app.post("/api/populate-bilete", (req, res) => {
       return res.status(500).json({ error: "Eroare la preluarea meciurilor" });
     }
 
-    // FIX: TRUNCATE șterge TOT, evitând duplicate
     pool.query(`TRUNCATE TABLE bilete`, (err) => {
       if (err) {
         console.error("Eroare la ștergere:", err);
@@ -457,7 +456,7 @@ app.post("/api/populate-bilete", (req, res) => {
       }
 
       const zone = [
-        // TRIBUNA 1
+    
         {
           zona: "TRIBUNA 1",
           sector: "A1",
@@ -529,7 +528,7 @@ app.post("/api/populate-bilete", (req, res) => {
           pret: 100.0,
         },
 
-        // TRIBUNA 2
+
         {
           zona: "TRIBUNA 2",
           sector: "C1",
@@ -594,7 +593,7 @@ app.post("/api/populate-bilete", (req, res) => {
           pret: 50.0,
         },
 
-        // PELUZA NORD
+    
         ...["D1", "D2", "D3", "D4", "D5"].flatMap((sector) => [
           {
             zona: "PELUZA NORD",
@@ -633,7 +632,7 @@ app.post("/api/populate-bilete", (req, res) => {
           },
         ]),
 
-        // PELUZA SUD
+ 
         ...["B1", "B2", "B3"].flatMap((sector) => [
           {
             zona: "PELUZA SUD",
@@ -713,11 +712,11 @@ app.post("/api/populate-bilete", (req, res) => {
   });
 });
 
-// ========== FUNCȚIE REUTILIZABILĂ: Generare bilete pentru un meci ==========
+
 function generateBileteForMatch(matchId) {
   return new Promise((resolve, reject) => {
     const zone = [
-      // TRIBUNA 1
+    
       { zona: "TRIBUNA 1", sector: "A1", randuri: [1, 6], locuriPerRand: 69, pret: 50.0 },
       { zona: "TRIBUNA 1", sector: "A1", randuri: [7, 11], locuriPerRand: 63, pret: 50.0 },
       { zona: "TRIBUNA 1", sector: "A1", randuri: [12, 17], locuriPerRand: 12, pret: 50.0 },
@@ -738,7 +737,7 @@ function generateBileteForMatch(matchId) {
       { zona: "TRIBUNA 2", sector: "C3", randuri: [1, 10], locuriPerRand: 54, pret: 50.0 },
       { zona: "TRIBUNA 2", sector: "C3", randuri: [11, 13], locuriPerRand: 44, pret: 50.0 },
       { zona: "TRIBUNA 2", sector: "C3", randuri: [14, 24], locuriPerRand: 53, pret: 50.0 },
-      // PELUZA NORD
+   
       ...["D1", "D2", "D3", "D4", "D5"].flatMap((sector) => [
         { zona: "PELUZA NORD", sector, randuri: [7, 8], locuriPerRand: 41, pret: 30.0 },
         { zona: "PELUZA NORD", sector, randuri: [9, 9], locuriPerRand: 42, pret: 30.0 },
@@ -746,7 +745,7 @@ function generateBileteForMatch(matchId) {
         { zona: "PELUZA NORD", sector, randuri: [11, 13], locuriPerRand: 52, pret: 30.0 },
         { zona: "PELUZA NORD", sector, randuri: [14, 19], locuriPerRand: 56, pret: 30.0 },
       ]),
-      // PELUZA SUD
+    
       ...["B1", "B2", "B3"].flatMap((sector) => [
         { zona: "PELUZA SUD", sector, randuri: [7, 8], locuriPerRand: 41, pret: 30.0 },
         { zona: "PELUZA SUD", sector, randuri: [9, 9], locuriPerRand: 42, pret: 30.0 },
@@ -756,7 +755,6 @@ function generateBileteForMatch(matchId) {
       ]),
     ];
 
-    // Șterge biletele existente DOAR pentru acest meci
     pool.query("DELETE FROM bilete WHERE match_id = ?", [matchId], (err) => {
       if (err) {
         console.error("[GenerateBilete] Eroare la ștergere:", err);
@@ -788,7 +786,6 @@ function generateBileteForMatch(matchId) {
   });
 }
 
-// Endpoint API pentru generare bilete (folosit din UI Admin)
 app.post("/api/populate-bilete-match", async (req, res) => {
   const { matchId } = req.body;
   if (!matchId) {
@@ -840,7 +837,6 @@ app.get("/api/sector-info", (req, res) => {
       const disponibile = results[0].disponibile;
       const pret = results[0].pret;
 
-      // Anti-caching headers
       res.setHeader(
         "Cache-Control",
         "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -1006,9 +1002,6 @@ app.get("/api/update-sector-info", (req, res) => {
   );
 });
 
-// Adaugă acest cod în database.js pentru test rapid
-
-// Endpoint simplificat pentru procesare plată (pentru test)
 app.post("/api/process-payment", async (req, res) => {
   console.log("=== PROCESARE PLATĂ NOUĂ ===");
   try {
@@ -1038,7 +1031,6 @@ app.post("/api/process-payment", async (req, res) => {
       matchId,
     });
 
-    // Validare
     if (!cardName || !cardNumber || !expirationDate || !cvc) {
       return res.status(400).json({
         success: false,
@@ -1053,13 +1045,11 @@ app.post("/api/process-payment", async (req, res) => {
       });
     }
 
-    // Generare ID-uri
     const orderId = "ORD-" + Date.now();
     const paymentId = "PAY-" + Date.now();
 
     console.log("IDs generate:", { orderId, paymentId });
 
-    // Salvare comandă
     pool.query(
       `INSERT INTO orders (order_id, user_email, user_name, total_amount, payment_id, status) 
              VALUES (?, ?, ?, ?, ?, 'completed')`,
@@ -1076,17 +1066,17 @@ app.post("/api/process-payment", async (req, res) => {
         console.log("Comandă salvată cu succes");
 
         try {
-          // Array pentru biletele PDF
+       
           const tickets = [];
 
-          // Procesare fiecare item
+     
           for (const item of items) {
             const ticketId = generateTicketCode();
             const invitationCode = generateInvitationNumber();
 
             console.log(`Procesare bilet: ${ticketId}`);
 
-            // Salvare bilet în DB
+          
             await new Promise((resolve, reject) => {
               const randValue = item.randuriSiLocuri
                 ? JSON.stringify(item.randuriSiLocuri)
@@ -1123,7 +1113,6 @@ app.post("/api/process-payment", async (req, res) => {
               );
             });
 
-            // Actualizare status locuri
             if (item.selectedSeatsKeys) {
               for (const seatKey of item.selectedSeatsKeys) {
                 const [rand, loc] = seatKey.split("-");
@@ -1132,7 +1121,7 @@ app.post("/api/process-payment", async (req, res) => {
                     `UPDATE bilete 
                  SET status = 'rezervat' 
                  WHERE sector = ? AND rand = ? AND loc = ? AND match_id = ?`,
-                    [item.sector, rand, loc, matchId], // Include matchId here
+                    [item.sector, rand, loc, matchId], 
                     (err, result) => {
                       if (err) {
                         console.error("Eroare la actualizarea locului:", err);
@@ -1148,7 +1137,7 @@ app.post("/api/process-payment", async (req, res) => {
               }
             }
 
-            // Pregătire date pentru PDF
+
             const ticketData = {
               ticketId,
               invitationCode,
@@ -1171,7 +1160,7 @@ app.post("/api/process-payment", async (req, res) => {
 
             console.log("Generare PDF pentru:", ticketData.ticketId);
 
-            // Generare PDF
+
             try {
               const pdfBuffer = await createTicketPDF(ticketData);
               tickets.push({
@@ -1185,7 +1174,6 @@ app.post("/api/process-payment", async (req, res) => {
             }
           }
 
-          // Trimite email
           if (tickets.length > 0) {
             console.log(`Pregătire trimitere email către: ${userEmail}`);
 
@@ -1266,7 +1254,7 @@ app.post("/api/process-payment", async (req, res) => {
             });
           }
 
-          // Răspuns succes
+       
           console.log("Trimitere răspuns succes către client");
           res.json({
             success: true,
@@ -1293,7 +1281,7 @@ app.post("/api/process-payment", async (req, res) => {
   }
 });
 
-// Endpoint de test pentru verificare
+
 app.get("/api/test-payment", (req, res) => {
   res.json({
     message: "Endpoint-ul de plată este disponibil",
@@ -1302,11 +1290,7 @@ app.get("/api/test-payment", (req, res) => {
   });
 });
 
-// ==========================================
-// ADMIN ENDPOINTS
-// ==========================================
 
-// Middleware simplu de verificare admin (prin email din query/body)
 const checkAdmin = (req, res, next) => {
   const email = req.query.email || req.body.email;
   if (!email) {
@@ -1327,7 +1311,7 @@ const checkAdmin = (req, res, next) => {
   );
 };
 
-// Utilizator - Vizualizare bilete
+
 app.get("/api/user/bilete", (req, res) => {
   const { email } = req.query;
   if (!email) {
@@ -1357,7 +1341,7 @@ app.get("/api/user/bilete", (req, res) => {
   });
 });
 
-// Admin - Statistici generale
+
 app.get("/api/admin/stats", checkAdmin, (req, res) => {
   const queries = {
     totalBilete: "SELECT COUNT(*) AS total FROM purchased_tickets",
@@ -1386,7 +1370,7 @@ app.get("/api/admin/stats", checkAdmin, (req, res) => {
   });
 });
 
-// Admin - Bilete vândute
+
 app.get("/api/admin/sold-tickets", checkAdmin, (req, res) => {
   const matchId = req.query.matchId;
   let query = `
@@ -1417,7 +1401,7 @@ app.get("/api/admin/sold-tickets", checkAdmin, (req, res) => {
   });
 });
 
-// Admin - Lista echipe
+
 app.get("/api/admin/teams", checkAdmin, (req, res) => {
   pool.query("SELECT id, nume, logo_url FROM echipe ORDER BY nume ASC", (err, results) => {
     if (err) {
@@ -1428,7 +1412,7 @@ app.get("/api/admin/teams", checkAdmin, (req, res) => {
   });
 });
 
-// Admin - Adaugă echipă
+
 app.post("/api/admin/add-team", checkAdmin, (req, res) => {
   const { nume, logo_url } = req.body;
   if (!nume) {
@@ -1447,7 +1431,7 @@ app.post("/api/admin/add-team", checkAdmin, (req, res) => {
   );
 });
 
-// Admin - Lista meciuri (toate, inclusiv trecute)
+
 app.get("/api/admin/matches", checkAdmin, (req, res) => {
   pool.query(
     `SELECT m.id, m.data, m.ora, e.nume AS awayTeamName, e.logo_url AS awayTeamLogo
@@ -1471,7 +1455,7 @@ app.get("/api/admin/matches", checkAdmin, (req, res) => {
   );
 });
 
-// Admin - Adaugă meci
+
 app.post("/api/admin/add-match", checkAdmin, async (req, res) => {
   const { data, ora, echipa_deplasare_id } = req.body;
   if (!data || !ora || !echipa_deplasare_id) {
