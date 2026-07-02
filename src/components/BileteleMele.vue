@@ -41,19 +41,42 @@ const formatTime = (timeString) => {
   return timeString.substring(0, 5);
 };
 
-const formatRand = (randString) => {
-  if (!randString) return '-';
-  try {
-    const parsed = JSON.parse(randString);
-    if (Array.isArray(parsed)) {
-      const rows = parsed.map(p => p.rand);
-      return [...new Set(rows)].join(', ');
-    }
-  } catch(e) {
-
-    return randString;
+const formatRand = (randValue) => {
+  if (!randValue && randValue !== 0) return '-';
+  
+  // If it's already an array (MySQL JSON column auto-parsed)
+  if (Array.isArray(randValue)) {
+    const rows = randValue.map(p => p.rand).filter(r => r !== undefined);
+    return rows.length ? [...new Set(rows)].join(', ') : '-';
   }
-  return randString;
+  
+  // If it's already an object (single item, auto-parsed)
+  if (typeof randValue === 'object' && randValue !== null) {
+    return randValue.rand !== undefined ? String(randValue.rand) : '-';
+  }
+  
+  // If it's a string, try to parse it as JSON
+  if (typeof randValue === 'string') {
+    // Remove possible BOM or invisible chars
+    const cleaned = randValue.trim().replace(/^\uFEFF/, '');
+    
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) {
+        const rows = parsed.map(p => p.rand).filter(r => r !== undefined);
+        return rows.length ? [...new Set(rows)].join(', ') : cleaned;
+      }
+      if (typeof parsed === 'object' && parsed !== null) {
+        return parsed.rand !== undefined ? String(parsed.rand) : cleaned;
+      }
+    } catch(e) {
+      // Not JSON — return as-is (it's already a plain value like "5")
+    }
+    
+    return cleaned;
+  }
+  
+  return String(randValue);
 };
 </script>
 
