@@ -62,7 +62,7 @@ const formatRand = (randString) => {
     <NavbarComponentStadionMunicipal />
     
     <div style="padding:50px;" class="flex-grow container mx-auto px-4 py-12 max-w-5xl">
-      <h1 class="text-3xl font-black text-blue-900 uppercase tracking-tight mb-2">Biletele Mele</h1>
+      <h1 class="text-3xl font-black text-blue-900 uppercase tracking-tight mb-2">Biletele Melee</h1>
       <p style="margin-bottom: 20px;" class="text-gray-500 mb-8">Aici poți vizualiza toate biletele achiziționate anterior.</p>
 
       <div v-if="isLoading" class="flex justify-center items-center py-20">
