@@ -96,7 +96,16 @@ const formatRand = (randString) => {
             <div class="flex items-center gap-3">
               <img src="https://upload.wikimedia.org/wikipedia/ro/6/68/CS_Universitatea_Craiova.svg" alt="U Craiova" class="h-8 object-contain drop-shadow-md bg-white rounded-full p-1" />
               <span class="font-bold text-sm">vs</span>
-              <img :src="'http://localhost:3000' + bilet.echipa_oaspete_logo" :alt="bilet.echipa_oaspete" class="h-8 object-contain drop-shadow-md bg-white rounded-full p-1" />
+              <img 
+                v-if="bilet.echipa_oaspete_logo" 
+                :src="'http://localhost:3000' + bilet.echipa_oaspete_logo" 
+                :alt="bilet.echipa_oaspete" 
+                class="h-8 object-contain drop-shadow-md bg-white rounded-full p-1"
+                @error="bilet.echipa_oaspete_logo = null"
+              />
+              <span v-else class="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded-full">
+                {{ bilet.echipa_oaspete }}
+              </span>
             </div>
             <div class="text-right">
               <div class="text-blue-200 text-xs font-medium uppercase tracking-wider">SuperLiga</div>
